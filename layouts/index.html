@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ .Site.Title }} — pure-Go, CGO-free PDF 1.7 writer</title>
+<meta name="description" content="go-pdfkit — a pure-Go, zero-C PDF 1.7 writer with a Go-idiomatic API. Vector graphics, subsetted font embedding via go-opentype, and JPEG/PNG image placement.">
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1b1f24; --muted: #57606a; --card: #f6f8fa;
+    --border: #d8dbe6; --accent: #991B1B; --accent-2: #EF4444; --accent-fg: #ffffff;
+    --ready: #1a7f37; --active: #7c3aed; --planned: #9a6700;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+      --bg: #0b0d12; --fg: #e6e8f0; --muted: #9aa0b4; --card: #141826;
+      --border: #262c40; --accent: #EF4444; --accent-2: #F87171; --accent-fg: #0b0d12;
+      --ready: #3fb950; --active: #a78bfa; --planned: #d29922;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b0d12; --fg: #e6e8f0; --muted: #9aa0b4; --card: #141826;
+    --border: #262c40; --accent: #EF4444; --accent-2: #F87171; --accent-fg: #0b0d12;
+    --ready: #3fb950; --active: #a78bfa; --planned: #d29922;
+  }
+  .theme-toggle {
+    position: fixed; top: 14px; right: 14px; z-index: 10;
+    font: inherit; font-size: .8rem; cursor: pointer; padding: 6px 12px;
+    color: var(--fg); background: var(--card); border: 1px solid var(--border); border-radius: 999px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 20px; }
+  header {
+    padding: 84px 0 40px; text-align: center;
+    background:
+      radial-gradient(900px 320px at 50% -40px, color-mix(in srgb, var(--accent-2) 20%, transparent), transparent 70%);
+  }
+  .logo { display: block; margin: 0 auto 18px; border-radius: 22px; filter: drop-shadow(0 8px 28px color-mix(in srgb, var(--accent) 35%, transparent)); }
+  h1 { font-size: 2.7rem; margin: 0 0 .3em; letter-spacing: -.02em; }
+  .tagline { font-size: 1.2rem; color: var(--muted); margin: 0 auto; max-width: 660px; }
+  .pills { margin: 22px 0 0; }
+  .pill {
+    display: inline-block; margin: 4px; padding: 3px 10px; font-size: .82rem;
+    color: var(--muted); background: var(--card); border: 1px solid var(--border); border-radius: 999px;
+  }
+  .cta { margin: 30px 0 0; }
+  .badges { margin: 18px 0 0; }
+  .badges a { margin: 0 3px; text-decoration: none; }
+  .badges img { vertical-align: middle; }
+  .btn {
+    display: inline-block; padding: 10px 18px; margin: 4px; border-radius: 8px; text-decoration: none;
+    font-weight: 600; border: 1px solid var(--border);
+  }
+  .btn.primary { background: linear-gradient(135deg, var(--accent-2), var(--accent)); color: var(--accent-fg); border-color: var(--accent); }
+  .btn.ghost { color: var(--fg); background: transparent; }
+  .lead { color: var(--fg); max-width: 760px; margin: 8px auto 0; text-align: center; }
+  .lead code { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; padding: 24px 0 8px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+  .card h3 { margin: 0 0 .35em; font-size: 1.2rem; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .card h3 a { color: inherit; text-decoration: none; }
+  .card h3 a:hover { text-decoration: underline; }
+  .card p { margin: 0; color: var(--fg); }
+  .card p code { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; }
+  .card .links { margin-top: 10px; font-size: .82rem; }
+  .card .links a { margin-right: 10px; }
+  .status { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); white-space: nowrap; }
+  .status.ready { color: var(--ready); }
+  .status.active { color: var(--active); }
+  .status.planned { color: var(--planned); }
+  pre.snippet { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; overflow-x: auto; font-size: .9rem; margin: 24px auto; max-width: 760px; }
+  .replaces { color: var(--muted); text-align: center; max-width: 760px; margin: 18px auto 0; padding: 14px 18px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
+  .principles { color: var(--muted); text-align: center; padding: 10px 0 0; }
+  footer { color: var(--muted); text-align: center; padding: 40px 0 56px; font-size: .9rem; }
+  a { color: var(--accent); }
+</style>
+<script>
+  (function(){var m=localStorage.getItem('theme');if(m&&m!=='system')document.documentElement.setAttribute('data-theme',m);})();
+</script>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+</head>
+<body>
+  <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle light, dark or system theme"><span id="theme-label">🖥️ System</span></button>
+  <header class="wrap">
+    <img class="logo" width="88" height="88" alt="go-pdfkit" src="/img/logo.svg">
+    <h1>go-pdfkit</h1>
+    <p class="tagline">Pure-Go, CGO-free PDF 1.7 writer with a Go-idiomatic API.</p>
+    <div class="pills">
+      <span class="pill">pure Go · CGO=0</span>
+      <span class="pill">PDF 1.7</span>
+      <span class="pill">100% statement coverage</span>
+      <span class="pill">deterministic output</span>
+      <span class="pill">built on go-opentype</span>
+      <span class="pill">BSD-3-Clause</span>
+    </div>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/go-pdfkit/pdfkit">pdfkit repo</a>
+      <a class="btn ghost" href="https://go-pdfkit.github.io/docs/">docs</a>
+      <a class="btn ghost" href="https://github.com/go-pdfkit">org</a>
+    </div>
+    <div class="badges">
+      <a href="https://pkg.go.dev/github.com/go-pdfkit/pdfkit"><img alt="pkg.go.dev" src="https://img.shields.io/badge/pkg.go.dev-pdfkit-007d9c?logo=go&amp;logoColor=white"></a>
+      <img alt="Go" src="https://img.shields.io/badge/Go-1.26.4%2B-00ADD8?logo=go&amp;logoColor=white">
+      <img alt="License" src="https://img.shields.io/badge/license-BSD--3--Clause-blue">
+    </div>
+  </header>
+
+  <main class="wrap">
+    <p class="lead"><strong>go-pdfkit</strong> builds PDF 1.7 documents from Go: pages, vector graphics, and
+      text set in embedded, subsetted fonts — with zero C dependencies anywhere in the stack. Fonts are
+      parsed and shaped by <a href="https://github.com/go-opentype/opentype">go-opentype</a>, the same
+      pure-Go text stack behind <a href="https://go-opentype.github.io/">go-opentype</a> and the Ruby port
+      <a href="https://github.com/go-ruby-prawn">go-ruby-prawn</a>.</p>
+
+    <pre class="snippet"><code>ttf, _ := os.ReadFile("font.ttf")
+font, _ := pdfkit.LoadFont(ttf)
+
+doc := pdfkit.New(pdfkit.Options{Title: "Report"})
+p := doc.AddPage(pdfkit.A4)
+
+p.SetFont(font, 24)
+p.Text(pdfkit.Mm(20), p.Height()-pdfkit.Mm(20), "Hello, pdfkit")
+
+f, _ := os.Open("chart.png")
+img, _, _ := image.Decode(f)
+p.DrawImage(img, pdfkit.Rect{
+    X: pdfkit.Mm(20), Y: pdfkit.Mm(40), Width: pdfkit.Mm(80), Height: pdfkit.Mm(60),
+})
+
+out, _ := os.Create("out.pdf")
+defer out.Close()
+doc.Write(out)</code></pre>
+
+    <section class="grid">
+      {{ range .Site.Params.repos }}
+      <article class="card">
+        <h3><a href="{{ .url }}">{{ .name }}</a> <span class="status {{ .status }}">{{ .status }}</span></h3>
+        <p>{{ .blurb | markdownify }}</p>
+        <div class="links">
+          <a href="{{ .url }}">repo</a>
+          <a href="https://pkg.go.dev/{{ .pkg }}">pkg.go.dev</a>
+        </div>
+      </article>
+      {{ end }}
+    </section>
+
+    <p class="replaces">
+      <strong>Text and fonts:</strong> every embedded font is written as a subset with Identity-H encoding, an
+      Identity CIDToGIDMap, a per-glyph <code>/W</code> width array and a <code>/ToUnicode</code> CMap for
+      copy/paste. TrueType <code>glyf</code> outlines embed as a subsetted <code>FontFile2</code> /
+      <code>CIDFontType2</code>; CFF/OpenType outlines embed as <code>FontFile3</code> /
+      <code>CIDFontType0</code>. TrueType is <strong>fully glyph-subsetted</strong>; CFF/OpenType fonts embed
+      their whole <code>CFF&nbsp;</code> table today — charstring subsetting is roadmap, not yet shipped. An
+      optional shaped-text API (<code>TextShaped</code>) runs the go-opentype shaper's GSUB/GPOS tables for
+      Arabic, Indic and CJK.
+    </p>
+
+    <p class="principles">Every generated document is deterministic — with the zero <code>Options</code> the
+      output has no timestamps and a content-derived <code>/ID</code>, so identical inputs produce
+      byte-identical PDFs. The suite runs at <strong>100&nbsp;% statement coverage</strong> and checks
+      correctness against an independent parser (<code>rsc.io/pdf</code>) plus a go-opentype re-parse of the
+      embedded font subset. Pure Go, cgo disabled, <strong>BSD-3-Clause</strong>.</p>
+  </main>
+
+  <footer class="wrap">
+    BSD-3-Clause · <a href="https://github.com/go-pdfkit">github.com/go-pdfkit</a>
+  </footer>
+  <script>
+  (function(){
+    var order=['system','light','dark'], root=document.documentElement;
+    var labels={system:'🖥️ System',light:'☀️ Light',dark:'🌙 Dark'};
+    function apply(m){ if(m==='system'){root.removeAttribute('data-theme');}else{root.setAttribute('data-theme',m);} localStorage.setItem('theme',m); var el=document.getElementById('theme-label'); if(el)el.textContent=labels[m]; }
+    var mode=localStorage.getItem('theme')||'system'; apply(mode);
+    var btn=document.getElementById('theme-toggle');
+    if(btn) btn.addEventListener('click',function(){ mode=order[(order.indexOf(mode)+1)%order.length]; apply(mode); });
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+baseURL = "https://go-pdfkit.github.io/"
+title = "go-pdfkit"
+disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
+
+[markup.goldmark.renderer]
+  unsafe = true
+
+[[params.repos]]
+  name = "pdfkit"
+  pkg = "github.com/go-pdfkit/pdfkit"
+  url = "https://github.com/go-pdfkit/pdfkit"
+  status = "ready"
+  blurb = "The writer: a pure-Go, **zero-C** PDF 1.7 document builder. Catalog, page tree, cross-reference table and trailer; vector graphics (paths, fill/stroke, colour, CTM transforms, clipping, transparency); TrueType and OpenType/CFF font embedding as subsetted **Type0 (Identity-H)** composite fonts with a `/ToUnicode` CMap; JPEG and raster image placement. Fonts are parsed and shaped with [go-opentype](https://github.com/go-opentype/opentype) — nothing outside the Go standard library and our own pure-Go libraries is required."
