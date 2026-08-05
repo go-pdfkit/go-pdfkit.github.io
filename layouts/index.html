@@ -95,6 +95,7 @@
       <span class="pill">100% statement coverage</span>
       <span class="pill">deterministic output</span>
       <span class="pill">built on go-opentype</span>
+      <span class="pill">widget bridge</span>
       <span class="pill">BSD-3-Clause</span>
     </div>
     <div class="cta">
@@ -149,14 +150,22 @@ doc.Write(out)</code></pre>
     </section>
 
     <p class="replaces">
-      <strong>Text and fonts:</strong> every embedded font is written as a subset with Identity-H encoding, an
-      Identity CIDToGIDMap, a per-glyph <code>/W</code> width array and a <code>/ToUnicode</code> CMap for
-      copy/paste. TrueType <code>glyf</code> outlines embed as a subsetted <code>FontFile2</code> /
-      <code>CIDFontType2</code>; CFF/OpenType outlines embed as <code>FontFile3</code> /
-      <code>CIDFontType0</code>. TrueType is <strong>fully glyph-subsetted</strong>; CFF/OpenType fonts embed
-      their whole <code>CFF&nbsp;</code> table today — charstring subsetting is roadmap, not yet shipped. An
-      optional shaped-text API (<code>TextShaped</code>) runs the go-opentype shaper's GSUB/GPOS tables for
-      Arabic, Indic and CJK.
+      <strong>Text and fonts:</strong> every embedded font is written as a subset with Identity-H encoding, a
+      per-glyph <code>/W</code> width array and a <code>/ToUnicode</code> CMap for copy/paste. TrueType
+      <code>glyf</code> outlines embed as a subsetted <code>FontFile2</code> / <code>CIDFontType2</code> with a
+      <code>/CIDToGIDMap</code> stream; CFF/OpenType outlines embed as a <strong>charstring-subsetted</strong>
+      <code>FontFile3</code> / <code>CIDFontType0</code>. Both outline flavours are fully glyph-subsetted; only a
+      CID-keyed CFF or a CFF2 (variable) font falls back to embedding the whole <code>CFF</code>/<code>CFF2</code>
+      table. An optional shaped-text API (<code>TextShaped</code>) runs the go-opentype shaper's GSUB/GPOS
+      tables for Arabic, Indic and CJK.
+    </p>
+
+    <p class="replaces">
+      <strong>Widget bridge:</strong> <code>Page.AddWidget</code> and <code>Page.AddWidgetVector</code> "print" a
+      <a href="https://github.com/go-widgets/toolkit">go-widgets/toolkit</a> widget tree onto a page —
+      <code>AddWidget</code> as a rasterised image XObject (pixel-identical to the screen), <code>AddWidgetVector</code>
+      as PDF vector operators, so fills/strokes stay crisp and text stays selectable, including a TrueType-font
+      widget label's own face embedded as real Type0 text.
     </p>
 
     <p class="principles">Every generated document is deterministic — with the zero <code>Options</code> the
