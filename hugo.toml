@@ -6,8 +6,57 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
   unsafe = true
 
 [[params.repos]]
+  name = "reader"
+  pkg = "github.com/go-pdfkit/reader"
+  url = "https://github.com/go-pdfkit/reader"
+  status = "ready"
+  blurb = "**Reads and writes the format itself.** Lexer and object model, cross-reference tables *and* streams with hybrid files and `/Prev` chains, object streams, repair by scanning when the table is wrong, every filter (Flate, LZW with early change, ASCIIHex, ASCII85, RunLength, PNG and TIFF predictors), the standard security handler from RC4-40 to AES-256, content streams and inline images, the page tree with inherited attributes — and a writer that produces the same bytes twice. Of **118 863 real PDFs**, 118 833 open; the thirty that do not are 27 PNGs named `.pdf`, one PostScript file and two truncated past recovery."
+
+[[params.repos]]
+  name = "ops"
+  pkg = "github.com/go-pdfkit/ops"
+  url = "https://github.com/go-pdfkit/ops"
+  status = "ready"
+  blurb = "**The verbs, and the `pdfops` command.** Merge, select, delete, reverse, move, rotate, crop, resize, split, n-up, booklet, overlay, blank pages, watermarks, page numbers, Bates stamps, sanitize, flatten, compress, encrypt, decrypt, permissions, and reading a page back as text or pictures. Links and bookmarks are carried over and pointed at the pages they became. Every verb is measured on the whole corpus: 118 833 files compressed and read back **page for page identical**, 35.2 GB down to 33.6 GB."
+
+[[params.repos]]
+  name = "render"
+  pkg = "github.com/go-pdfkit/render"
+  url = "https://github.com/go-pdfkit/render"
+  status = "ready"
+  blurb = "**Turns a page into pixels.** The transform stack, every painting operator, both winding rules, strokes with caps/joins/miter/dashes, clipping, every colour space, transparency, form XObjects; images at every depth with soft and stencil masks; text from TrueType, OpenType, **bare CFF**, **PostScript Type 1**, composite and Type 3 fonts; PDF functions of all four kinds, axial and radial shadings, shading and tiling patterns. Rasterises with [go-gfx](https://github.com/go-gfx/gfx) and reads outlines with [go-opentype](https://github.com/go-opentype/opentype). Builds for `js/wasm`."
+
+[[params.repos]]
+  name = "pdffont"
+  pkg = "github.com/go-pdfkit/pdffont"
+  url = "https://github.com/go-pdfkit/pdffont"
+  status = "ready"
+  blurb = "**What a document says about a font** — not the outlines, which are the program's business. Which codes a string holds, how wide each is, what each is called, and what text each stands for, through `/ToUnicode` and the encodings. It refuses one guess: a **symbolic** font read through an assumed encoding gives the wrong letter with nothing to say so. The glyph-name table is checked against the documents themselves — **63 515 names, 99.31% agreement**."
+
+[[params.repos]]
+  name = "extract"
+  pkg = "github.com/go-pdfkit/extract"
+  url = "https://github.com/go-pdfkit/extract"
+  status = "ready"
+  blurb = "**Reads a page back**: the text with where each piece of it sits, and the pictures with the box each covers. A page holds instructions for drawing glyphs, not text — so where the document says nothing about what they mean, this **says so** rather than guessing. Over the whole corpus: 121 946 pages, 34 million characters, 1.89% of runs that nothing in the document could name, 300 685 pictures located, no panics."
+
+[[params.repos]]
+  name = "coedit"
+  pkg = "github.com/go-pdfkit/coedit"
+  url = "https://github.com/go-pdfkit/coedit"
+  status = "ready"
+  blurb = "**A PDF several people edit at once.** What is shared is not the file — merging two piles of bytes cannot be done — but the *plan*: which pages, from which files, in which order, turned and cropped how, with which bookmarks over them. A list, a tree and a handful of fields, which a [CRDT](https://github.com/go-crdt/crdt) merges without asking anybody. Checked with **25 editors making random edits for 40 rounds**, merged in a random order, all agreeing on the same document."
+
+[[params.repos]]
+  name = "app"
+  pkg = "github.com/go-pdfkit/app"
+  url = "https://github.com/go-pdfkit/app"
+  status = "ready"
+  blurb = "**A PDF workbench that runs in a browser tab and nowhere else.** Open a file, turn its pages, rotate one, drop one, lay it out two to a sheet, write across it, save it back out — and none of it leaves the machine, because there is nowhere for it to go. The whole tool is one wasm binary the browser downloads once and a service worker then keeps. Driven in CI by a real Chrome over the DevTools protocol, reading the canvas pixels back."
+
+[[params.repos]]
   name = "pdfkit"
   pkg = "github.com/go-pdfkit/pdfkit"
   url = "https://github.com/go-pdfkit/pdfkit"
   status = "ready"
-  blurb = "The writer: a pure-Go, **zero-C** PDF 1.7 document builder. Catalog, page tree, cross-reference table and trailer; vector graphics (paths, fill/stroke, colour, CTM transforms, clipping, transparency); TrueType and OpenType/CFF font embedding as subsetted **Type0 (Identity-H)** composite fonts with a `/ToUnicode` CMap; JPEG and raster image placement; a **widget bridge** (`AddWidget`/`AddWidgetVector`) that prints a go-widgets/toolkit widget tree onto a page, rasterised or as selectable vector text. Fonts are parsed and shaped with [go-opentype](https://github.com/go-opentype/opentype) — nothing outside the Go standard library and our own pure-Go libraries is required."
+  blurb = "**The document builder**: pages, vector graphics, and text set in embedded, subsetted fonts. TrueType and OpenType/CFF embed as **Type0 (Identity-H)** composite fonts with a `/ToUnicode` CMap; JPEG and raster images place directly; a **widget bridge** prints a [go-widgets](https://github.com/go-widgets/toolkit) tree onto a page, rasterised or as selectable vector text. With the zero `Options` the output has no timestamps and a content-derived `/ID`, so identical inputs produce byte-identical PDFs."

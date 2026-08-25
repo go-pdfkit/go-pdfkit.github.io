@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ .Site.Title }} — pure-Go, CGO-free PDF 1.7 writer</title>
-<meta name="description" content="go-pdfkit — a pure-Go, zero-C PDF 1.7 writer with a Go-idiomatic API. Vector graphics, subsetted font embedding via go-opentype, and JPEG/PNG image placement.">
+<meta name="description" content="go-pdfkit — the whole of PDF in pure Go, with no C anywhere: read, write, rearrange, draw, read back, and edit together in a browser tab.">
 <style>
   :root {
     --bg: #ffffff; --fg: #1b1f24; --muted: #57606a; --card: #f6f8fa;
@@ -111,30 +111,35 @@
   </header>
 
   <main class="wrap">
-    <p class="lead"><strong>go-pdfkit</strong> builds PDF 1.7 documents from Go: pages, vector graphics, and
-      text set in embedded, subsetted fonts — with zero C dependencies anywhere in the stack. Fonts are
-      parsed and shaped by <a href="https://github.com/go-opentype/opentype">go-opentype</a>, the same
-      pure-Go text stack behind <a href="https://go-opentype.github.io/">go-opentype</a> and the Ruby port
-      <a href="https://github.com/go-ruby-prawn">go-ruby-prawn</a>.</p>
+    <p class="lead"><strong>go-pdfkit</strong> is the whole of PDF in Go, with <strong>no C anywhere</strong>:
+      read a file, write one, rearrange it, draw it, read it back as words and pictures, and edit it with other
+      people — in a browser tab if you like, since every one of these builds for <code>js/wasm</code>.
+      Fonts are parsed and shaped by <a href="https://github.com/go-opentype/opentype">go-opentype</a> and
+      pages are rasterised by <a href="https://github.com/go-gfx/gfx">go-gfx</a>.</p>
 
-    <pre class="snippet"><code>ttf, _ := os.ReadFile("font.ttf")
-font, _ := pdfkit.LoadFont(ttf)
+    <p class="lead">Everything here is measured against <strong>118 863 real PDFs</strong> — arXiv's figures,
+      Matplotlib and Mathematica and pdfTeX and Ghostscript and Adobe — rather than against a handful of files
+      somebody wrote to pass a test. That corpus is what found a stroke that came out at half its colour, a
+      font that took the dots off every <em>i</em>, and a colour transform that turned every plot's paper
+      yellow. Each of them is in the release notes of the library it was found in.</p>
 
-doc := pdfkit.New(pdfkit.Options{Title: "Report"})
-p := doc.AddPage(pdfkit.A4)
+    <pre class="snippet"><code>// Take three pages out of a report, turn one the right way up,
+// stamp the lot, and write it out.
+doc, _ := ops.Open(bytes)
+doc.Select("4-6")
+doc.SetRotation("2", 90)
+doc.Watermark("all", "DRAFT")
+out, _ := doc.Bytes()
 
-p.SetFont(font, 24)
-p.Text(pdfkit.Mm(20), p.Height()-pdfkit.Mm(20), "Hello, pdfkit")
+// Draw a page, and read one back.
+img, _ := render.Page(src, 1, render.Options{DPI: 150})
+text, _ := extract.Text(src, 1)</code></pre>
 
-f, _ := os.Open("chart.png")
-img, _, _ := image.Decode(f)
-p.DrawImage(img, pdfkit.Rect{
-    X: pdfkit.Mm(20), Y: pdfkit.Mm(40), Width: pdfkit.Mm(80), Height: pdfkit.Mm(60),
-})
-
-out, _ := os.Create("out.pdf")
-defer out.Close()
-doc.Write(out)</code></pre>
+    <pre class="snippet"><code>$ pdfops merge out.pdf a.pdf b.pdf
+$ pdfops nup -n 4 slides.pdf handout.pdf
+$ pdfops encrypt -user letmein -allow print,copy plain.pdf locked.pdf
+$ pdfops text -layout -pages 1 paper.pdf
+$ pdfops images paper.pdf pictures/</code></pre>
 
     <section class="grid">
       {{ range .Site.Params.repos }}
@@ -148,6 +153,15 @@ doc.Write(out)</code></pre>
       </article>
       {{ end }}
     </section>
+
+    <p class="replaces">
+      <strong>What the corpus says.</strong> Every wave of work here is measured on the output rather than on
+      the exit status: the pages are rendered before and after and their pixels hashed, and the biggest changes
+      are put beside what the operating system's own renderer draws. 118 833 of 118 835 real files open;
+      1 536 769 753 content operations read; every one of them rewrites to an identical fingerprint;
+      118 833 encrypt, decrypt and compress with every page byte for byte the same; 4 108 pages draw with no
+      panics and six blank; 121 946 pages read back as 34 million characters.
+    </p>
 
     <p class="replaces">
       <strong>Text and fonts:</strong> every embedded font is written as a subset with Identity-H encoding, a
@@ -168,11 +182,10 @@ doc.Write(out)</code></pre>
       widget label's own face embedded as real Type0 text.
     </p>
 
-    <p class="principles">Every generated document is deterministic — with the zero <code>Options</code> the
-      output has no timestamps and a content-derived <code>/ID</code>, so identical inputs produce
-      byte-identical PDFs. The suite runs at <strong>100&nbsp;% statement coverage</strong> and checks
-      correctness against an independent parser (<code>rsc.io/pdf</code>) plus a go-opentype re-parse of the
-      embedded font subset. Pure Go, cgo disabled, <strong>BSD-3-Clause</strong>.</p>
+    <p class="principles">Every library here runs at <strong>100&nbsp;% statement coverage</strong>, including
+      the branches that report a file saying something it should not. Every one builds for the six 64-bit
+      architectures the fleet targets plus <code>js/wasm</code>, macOS and Windows. Pure Go, cgo disabled,
+      <strong>BSD-3-Clause</strong>.</p>
   </main>
 
   <footer class="wrap">
