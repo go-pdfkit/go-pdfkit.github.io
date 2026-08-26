@@ -24,7 +24,7 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
   pkg = "github.com/go-pdfkit/render"
   url = "https://github.com/go-pdfkit/render"
   status = "ready"
-  blurb = "**Turns a page into pixels.** The transform stack, every painting operator, both winding rules, strokes with caps/joins/miter/dashes, clipping, every colour space, transparency, form XObjects; images at every depth with soft and stencil masks; text from TrueType, OpenType, **bare CFF**, **PostScript Type 1**, composite and Type 3 fonts; PDF functions of all four kinds, axial and radial shadings, shading and tiling patterns. Rasterises with [go-gfx](https://github.com/go-gfx/gfx) and reads outlines with [go-opentype](https://github.com/go-opentype/opentype). Builds for `js/wasm`."
+  blurb = "**Turns a page into pixels.** The transform stack, every painting operator, both winding rules, strokes with caps/joins/miter/dashes, clipping, every colour space, transparency, form XObjects; images at every depth with soft and stencil masks; text from TrueType, OpenType, **bare CFF**, **PostScript Type 1**, composite and Type 3 fonts; PDF functions of all four kinds, **all seven shadings** — axial, radial, function-based, and the four mesh kinds, triangles and Coons and tensor patches — and shading and tiling patterns, placed in the space of the form that names them. Rasterises with [go-gfx](https://github.com/go-gfx/gfx) and reads outlines with [go-opentype](https://github.com/go-opentype/opentype). Builds for `js/wasm`."
 
 [[params.repos]]
   name = "pdffont"
