@@ -48,6 +48,41 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
   blurb = "**A PDF several people edit at once.** What is shared is not the file — merging two piles of bytes cannot be done — but the *plan*: which pages, from which files, in which order, turned and cropped how, with which bookmarks over them. A list, a tree and a handful of fields, which a [CRDT](https://github.com/go-crdt/crdt) merges without asking anybody. Checked with **25 editors making random edits for 40 rounds**, merged in a random order, all agreeing on the same document."
 
 [[params.repos]]
+  name = "forms"
+  pkg = "github.com/go-pdfkit/forms"
+  url = "https://github.com/go-pdfkit/forms"
+  status = "ready"
+  blurb = "**Read, fill and draw an AcroForm** — the boxes somebody types into, the squares they tick, the lists they choose from. A field's value is not what gets drawn: what gets drawn is a little content stream beside it, so a reader that fills a field and does not rewrite that stream leaves the page blank. An AcroForm dictionary with an empty field list is not a form — **561** of the 118 833 figure-corpus files are exactly that, left behind by a producer. Builds for `js/wasm`."
+
+[[params.repos]]
+  name = "xfa"
+  pkg = "github.com/go-pdfkit/xfa"
+  url = "https://github.com/go-pdfkit/xfa"
+  status = "ready"
+  blurb = "**The form inside a PDF whose pages are blank.** Of **2 240** real government forms, 560 carry an XFA package and **546 are static** — a second, proprietary copy of a form already drawn on the pages, which `forms` fills without help. The other **fourteen** are dynamic: their pages hold a panel reading *Please wait... your PDF viewer may not be able to display this type of document*, and the document exists only as XML. Adobe removed the format from PDF 2.0, and no browser lays one out."
+
+[[params.repos]]
+  name = "html2pdf"
+  pkg = "github.com/go-pdfkit/html2pdf"
+  url = "https://github.com/go-pdfkit/html2pdf"
+  status = "ready"
+  blurb = "**Static HTML to VECTOR PDF**, zero C. No headless browser and no screenshot-then-slice: it drives go-webengine's own layout tree straight into `pdfkit`'s text, rect and stroke calls, so the text in the PDF is real text — selectable, searchable, small — rather than a picture of text."
+
+[[params.repos]]
+  name = "latex"
+  pkg = "github.com/go-pdfkit/latex"
+  url = "https://github.com/go-pdfkit/latex"
+  status = "ready"
+  blurb = "**The other direction: reconstruct LaTeX source from a PDF.** A PDF that came from TeX does not contain a document; it contains the marks TeX made putting one on paper — glyphs at absolute positions, from fonts whose names are the only surviving record of what the author asked for. `Reconstruct` gives back the `.tex`, and writes out the pictures its includegraphics commands name."
+
+[[params.repos]]
+  name = "conformance"
+  pkg = "github.com/go-pdfkit/conformance"
+  url = "https://github.com/go-pdfkit/conformance"
+  status = "ready"
+  blurb = "**Where all of the above is judged by implementations that are not ours**, over corpora of real PDFs. A file our own reader reads back perfectly can draw nothing anywhere else — that has happened here: a rebuilt cross-reference stream our reader was delighted with, and macOS drew a blank page. So these tools ask poppler rather than asking ourselves. A figure is only as honest as the population it came from, so the corpora are chosen and stated rather than collected."
+
+[[params.repos]]
   name = "app"
   pkg = "github.com/go-pdfkit/app"
   url = "https://github.com/go-pdfkit/app"
