@@ -16,6 +16,14 @@ on:
   pull_request:
   push:
     branches: [main]
+  # ⛔ A push to THIS repository is the wrong event to watch. What makes the
+  # list wrong is a repository appearing in the ORGANISATION, which never
+  # touches this one. go-filesystems missed osfs for five days exactly that
+  # way: the check was green, and it had not run since three days before the
+  # repository existed.
+  schedule:
+    - cron: "29 6 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
