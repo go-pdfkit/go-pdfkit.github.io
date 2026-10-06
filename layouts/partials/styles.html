@@ -19,16 +19,16 @@
 {{ $deep   := $br.deep   | default "#054A66" }}
 {{ $bright := $br.bright | default "#22CCE2" }}
 {{ $shadow := $br.shadow | default "rgba(0,121,168,.7)" }}
-{{/* Three more that were written into the RULES rather than taken as
+{{- /* Three more that were written into the RULES rather than taken as
      parameters, so every org using this sheet glowed cyan whatever its logo
      was. Measured on the published amber page: go-pkgx's rendered CSS carried
      four cyan literals -- the nav glyph's drop shadow, both hero washes and
      the performance hero's. Each default below is the exact text that was in
      the rule, so a build with no [params.brand] still emits a byte-identical
      <style> block and the check in the README keeps meaning something. */}}
-{{ $glow     := $br.glow     | default "rgba(0,121,168,.6)" }}
-{{ $wash     := $br.wash     | default "rgba(0,121,168,.10)" }}
-{{ $washDeep := $br.washDeep | default "rgba(5,74,102,.06)" }}
+{{- $glow     := $br.glow     | default "rgba(0,121,168,.6)" }}
+{{- $wash     := $br.wash     | default "rgba(0,121,168,.10)" }}
+{{- $washDeep := $br.washDeep | default "rgba(5,74,102,.06)" }}
 {{ $chipBg     := $br.chipBg     | default "#e8f8fc" }}
 {{ $chipBorder := $br.chipBorder | default "#bde9f4" }}
 {{ $chipFg     := $br.chipFg     | default "#054A66" }}
