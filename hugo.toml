@@ -5,6 +5,18 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
 [markup.goldmark.renderer]
   unsafe = true
 
+# The architectures the whole test suite RUNS on -- not the ones it compiles
+# for. amd64 and arm64 come from the ubuntu, windows and macOS runners; the
+# other six from the arch job, five under qemu and 386 natively. Listed here
+# so the page renders both the names and the count from one place: a count
+# typed beside the names it counts is right the day it is typed.
+#
+# ⛔ Cross-compilation is NOT membership of this list. js/wasm, darwin and
+# windows are built and not run on every push, and saying "runs on" of a
+# target nothing executed is the claim this fleet exists to avoid making.
+[params]
+  arches = ["amd64", "arm64", "riscv64", "loong64", "ppc64le", "s390x", "386", "arm"]
+
 # The shared stylesheet (layouts/partials/styles.html) is byte-identical to the
 # one go-authn and go-fileshare carry; everything that differs between the orgs
 # using it is here. The DARKER stop of the logo is the light-mode accent (it has
