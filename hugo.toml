@@ -5,6 +5,35 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
 [markup.goldmark.renderer]
   unsafe = true
 
+# The shared stylesheet (layouts/partials/styles.html) is byte-identical to the
+# one go-authn and go-fileshare carry; everything that differs between the orgs
+# using it is here. The DARKER stop of the logo is the light-mode accent (it has
+# to carry text on white), the BRIGHTER stop is the dark-mode one, and `deep` is
+# a further step down for the gradient's far end. Both stops are read off
+# static/img/logo.svg rather than chosen: #EF4444 -> #991B1B.
+[params.brand]
+  base   = "#991B1B"   # logo's darker stop — light-mode accent and gradient start
+  deep   = "#7F1D1D"   # a step darker again — gradient end
+  bright = "#EF4444"   # logo's brighter stop — dark-mode accent
+  shadow = "rgba(153,27,27,.7)"   # = base, for the primary button's drop shadow
+  # Chip tints: the BRIGHT stop mixed into white at 12 % and 30 %, the same
+  # derivation go-pkgx's amber uses — reproducing its committed #fef3e2 and
+  # #fce2b6 from #F59E0B is how that rule was confirmed rather than assumed.
+  chipBg         = "#fde9e9"
+  chipBorder     = "#fac7c7"
+  chipFg         = "#7F1D1D"
+  chipBgDark     = "rgba(239,68,68,.14)"
+  chipBorderDark = "rgba(239,68,68,.32)"
+  chipFgDark     = "#fca5a5"
+  # The three that used to be written into the rules: the nav glyph's drop
+  # shadow and the two hero washes. = base, base and deep.
+  glow     = "rgba(153,27,27,.6)"
+  wash     = "rgba(153,27,27,.10)"
+  washDeep = "rgba(127,29,29,.06)"
+  # Contrast, measured rather than eyeballed (WCAG 2.1, body-text bar is 4.5):
+  #   #991B1B on #ffffff  8.31:1 AAA     #EF4444 on #0b0e14  5.13:1 AA
+  #   #7F1D1D on #fde9e9  8.59:1 AAA     #fca5a5 on #0b0e14 10.18:1 AAA
+
 [[params.repos]]
   name = "reader"
   pkg = "github.com/go-pdfkit/reader"
