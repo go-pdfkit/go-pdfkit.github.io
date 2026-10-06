@@ -11,7 +11,7 @@
 <body class="lm">
   <header class="nav"><div class="wrap">
     <a class="brand" href="/"><img class="glyph" src="/img/logo.svg" width="32" height="32" alt="go-pdfkit logo"> go-pdfkit</a>
-    <nav><a href="#corpus">Corpus</a><a href="#use">Use it</a><a href="#repos">Repositories</a><a href="#type">Type</a></nav>
+    <nav><a href="#corpus">Corpus</a><a href="#use">Use it</a><a href="#repos">Repositories</a><a href="#arches">Where it runs</a></nav>
     {{ partial "theme-toggle.html" . }}
     <a class="btn btn-ghost" href="https://github.com/go-pdfkit">GitHub</a>
   </div></header>
@@ -21,13 +21,14 @@
       <h1 class="head">The whole of PDF in Go,<br><span class="accent">with no C anywhere.</span></h1>
       <p class="sub">Read a file, write one, rearrange it, draw it, read it back as words and pictures, and <b>edit it with other people</b> — in a browser tab if you like, since every one of these builds for <code>js/wasm</code>. Fonts are parsed and shaped by <a href="https://github.com/go-opentype/opentype">go-opentype</a>, pages are rasterised by <a href="https://github.com/go-gfx/gfx">go-gfx</a>. Pure Go, <code>CGO_ENABLED=0</code>. BSD-3-Clause.</p>
       <div class="cta">
-        <a class="btn btn-primary" href="#use">See it work →</a>
+        <a class="btn btn-primary" href="https://go-pdfkit.github.io/app/">Edit a PDF in your browser →</a>
+        <a class="btn btn-ghost" href="#use">See the API</a>
         <a class="btn btn-ghost" href="https://go-pdfkit.github.io/docs/">Read the documentation</a>
       </div>
       {{/* ⛔ DERIVED. A count typed beside the data it counts is right the day
            it is typed and has no way of staying right; the repository total
            comes from the list itself. */}}
-      <div class="trust"><span><b>{{ len .Site.Params.repos }}</b> repositories</span><span><b>118 863</b> real PDFs measured</span><span><b>100 %</b> statement coverage</span></div>
+      <div class="trust"><span><b>{{ len .Site.Params.repos }}</b> repositories</span><span><b>{{ len .Site.Params.arches }}</b> architectures, tests <i>run</i></span><span><b>118 863</b> real PDFs measured</span><span><b>100 %</b> statement coverage</span></div>
     </div>
     <div class="term">
       <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span class="t">pdfops — zsh</span></div>
@@ -45,6 +46,12 @@ marked rather than guessed at.</span>
   <div class="strip"><div class="wrap">
     <span class="lead-line">One organisation, <b>{{ len .Site.Params.repos }}</b> libraries, every one of them pure Go</span>
     <div class="mods">{{ range .Site.Params.repos }}<a href="#repos">{{ .name }}</a>{{ end }}</div>
+    {{/* ⛔ These are the architectures the suite RUNS on, not the ones it
+         compiles for. Both the names and the count come from
+         [params.arches], because a count typed beside the names it counts is
+         right the day it is typed and has no way of staying right. */}}
+    <span class="lead-line">and the whole suite <b>runs</b> on <b>{{ len .Site.Params.arches }}</b> of them, big-endian and 32-bit included</span>
+    <div class="mods">{{ range .Site.Params.arches }}<a href="#arches">{{ . }}</a>{{ end }}</div>
   </div></div>
 
   <section id="corpus"><div class="wrap">
@@ -94,6 +101,18 @@ text, _ := extract.Text(src, 1)</pre>
     </div>
   </div></section>
 
+  <section id="arches"><div class="wrap">
+    <span class="eyebrow">Where it runs</span>
+    <h2>{{ len .Site.Params.arches }} architectures, and the tests <i>run</i> on every one.</h2>
+    <p class="lead">Cross-compiling proves a program builds. It says nothing about what it does when a byte order, a word size or a floating-point unit differs — and that is where a format parser lives. Every repository here runs its whole suite on each of these on every push: {{ $n := len .Site.Params.arches }}{{ range $i, $a := .Site.Params.arches }}{{ if $i }}{{ if eq $i (sub $n 1) }} and {{ else }}, {{ end }}{{ end }}<code>{{ $a }}</code>{{ end }}.</p>
+    <div class="grid">
+      <div class="card"><div class="ico">🔄</div><h3>s390x is big-endian</h3><p>Every lane was green from the first run, which is the useful kind of result: nothing in the stack had quietly assumed a byte order. A PDF is full of two- and four-byte integers, and a reader that reads them the wrong way round on one machine is a reader nobody can trust on any.</p></div>
+      <div class="card"><div class="ico">📏</div><h3>386 and arm are 32-bit</h3><p>They found four real defects. One of them — a guard converting a float before it could judge it — crashes on arm64 as well, so a 32-bit lane paid for itself on a 64-bit machine. 386 runs <b>natively</b>, not under emulation, because an emulator that loses floating-point state across a preemption makes a flaky lane out of correct code.</p></div>
+      <div class="card"><div class="ico">⚠️</div><h3>loong64 is pinned, and we say why</h3><p>Its lane names Go 1.26.4 rather than the current release, because <a href="https://github.com/golang/go/issues/81000">golang/go#81000</a> miscompiles a float-to-integer conversion there and the backport is still open. We found it with this suite, on real LoongArch silicon, and reported it upstream. A pinned lane with a reason beats a green one with a workaround nobody wrote down.</p></div>
+      <div class="card"><div class="ico">🌐</div><h3>and <code>js/wasm</code>, which is the workbench</h3><p>The same libraries compile to one wasm binary with no C, no CDN and no <code>SharedArrayBuffer</code> — which is why <a href="https://go-pdfkit.github.io/app/">the workbench</a> opens a file, rearranges it and saves it back without any of it leaving the machine.</p></div>
+    </div>
+  </div></section>
+
   <section id="type"><div class="wrap">
     <span class="eyebrow">Text, fonts and widgets</span>
     <h2>A subset, an encoding, and text you can still copy.</h2>
@@ -108,7 +127,7 @@ text, _ := extract.Text(src, 1)</pre>
   <section id="eco" style="padding-top:6px"><div class="wrap">
     <div class="band">
       <h2>100 % statement coverage, including the branches that report a bad file.</h2>
-      <p>Every library here builds for the six 64-bit architectures the fleet targets, plus <code>js/wasm</code>, macOS and Windows. Pure Go, cgo disabled, BSD-3-Clause.</p>
+      <p>And it <b>runs</b> on {{ len .Site.Params.arches }} architectures, not merely compiles for them. Pure Go, cgo disabled, BSD-3-Clause.</p>
       <a class="btn btn-ghost" href="https://github.com/go-pdfkit">Read the source on GitHub →</a>
     </div>
   </div></section>
