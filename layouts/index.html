@@ -34,8 +34,8 @@
       <h1 class="head">The whole of PDF<br><span class="accent">in Go, with no C anywhere.</span></h1>
       <p class="sub">Read a file, write one, rearrange it, draw it, read it back as words and pictures, and <b>edit it with other people</b> — in a browser tab if you like, since every one of these builds for <code>js/wasm</code>. Fonts are parsed and shaped by <a href="https://github.com/go-opentype/opentype">go-opentype</a>, pages are rasterised by <a href="https://github.com/go-gfx/gfx">go-gfx</a>. Pure Go, <code>CGO_ENABLED=0</code>. BSD-3-Clause.</p>
       <div class="cta">
-        <a class="btn btn-primary" href="https://go-pdfkit.github.io/app/">Edit a PDF in your browser →</a>
-        <a class="btn btn-ghost" href="https://go-pdfkit.github.io/docs/">Read the documentation</a>
+        <a class="btn btn-primary" href="https://go-pdfkit.github.io/app/">{{ partial "icons/link-external.html" . }}Edit a PDF in your browser →</a>
+        <a class="btn btn-ghost" href="https://go-pdfkit.github.io/docs/">{{ partial "icons/book.html" . }}Read the documentation</a>
       </div>
       {{/* ⛔ DERIVED. A count typed beside the data it counts is right the day
            it is typed and has no way of staying right; the repository total
@@ -145,7 +145,7 @@ text, _ := extract.Text(src, 1)</pre>
     <div class="band">
       <h2>100 % statement coverage, including the branches that report a bad file.</h2>
       <p>And it <b>runs</b> on {{ len .Site.Params.arches }} architectures, not merely compiles for them. Pure Go, cgo disabled, BSD-3-Clause.</p>
-      <a class="btn btn-ghost" href="https://github.com/go-pdfkit">Read the source on GitHub →</a>
+      <a class="btn btn-ghost" href="https://github.com/go-pdfkit">{{ partial "icons/mark-github.html" . }}Read the source on GitHub →</a>
     </div>
   </div></section>
 
