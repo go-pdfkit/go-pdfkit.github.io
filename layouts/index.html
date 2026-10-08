@@ -31,7 +31,7 @@
 
   <div class="hero"><div class="wrap">
     <div>
-      <h1 class="head">The whole of PDF in Go,<br><span class="accent">with no C anywhere.</span></h1>
+      <h1 class="head">The whole of PDF<br><span class="accent">in Go, with no C anywhere.</span></h1>
       <p class="sub">Read a file, write one, rearrange it, draw it, read it back as words and pictures, and <b>edit it with other people</b> — in a browser tab if you like, since every one of these builds for <code>js/wasm</code>. Fonts are parsed and shaped by <a href="https://github.com/go-opentype/opentype">go-opentype</a>, pages are rasterised by <a href="https://github.com/go-gfx/gfx">go-gfx</a>. Pure Go, <code>CGO_ENABLED=0</code>. BSD-3-Clause.</p>
       <div class="cta">
         <a class="btn btn-primary" href="https://go-pdfkit.github.io/app/">Edit a PDF in your browser →</a>
@@ -39,8 +39,13 @@
       </div>
       {{/* ⛔ DERIVED. A count typed beside the data it counts is right the day
            it is typed and has no way of staying right; the repository total
-           comes from the list itself. */}}
-      <div class="trust"><span><b>{{ len .Site.Params.repos }}</b> repositories</span><span><b>{{ len .Site.Params.arches }}</b> architectures, tests <i>run</i></span><span><b>118 863</b> real PDFs measured</span><span><b>100 %</b> statement coverage</span></div>
+           comes from the list itself.
+
+           THREE of them, as on every other landing in the fleet. A fourth
+           wrapped onto a line of its own and sat there unbalanced, and the one
+           that was dropped — the coverage — is said better by its own heading
+           further down the page. */}}
+      <div class="trust"><span><b>{{ len .Site.Params.repos }}</b> repositories</span><span><b>{{ len .Site.Params.arches }}</b> architectures, tests <i>run</i></span><span><b>118 863</b> real PDFs measured</span></div>
     </div>
     <div class="term">
       <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i><span class="t">pdfops — zsh</span></div>
