@@ -75,6 +75,13 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
   blurb = "**What a document says about a font** — not the outlines, which are the program's business. Which codes a string holds, how wide each is, what each is called, and what text each stands for, through `/ToUnicode` and the encodings. It refuses one guess: a **symbolic** font read through an assumed encoding gives the wrong letter with nothing to say so. The glyph-name table is checked against the documents themselves — **63 515 names, 99.31% agreement**."
 
 [[params.repos]]
+  name = "convert"
+  pkg = "github.com/go-pdfkit/convert"
+  url = "https://github.com/go-pdfkit/convert"
+  status = "ready"
+  blurb = "**Pictures into a PDF, and a PDF back into pictures.** Reads PNG, JPEG, GIF, BMP, TIFF and WebP; writes all but WebP — which it refuses **by name**, because there is no pure-Go encoder and writing a PNG under a `.webp` name would be worse than saying no. The **content** decides a format, never the file's name. Only the **DPI** says which page a picture is: 2480×3508 is A4 at 300 and a page a metre tall at 72. Fitting onto paper uses **one scale for both axes** and only ever shrinks."
+
+[[params.repos]]
   name = "extract"
   pkg = "github.com/go-pdfkit/extract"
   url = "https://github.com/go-pdfkit/extract"
