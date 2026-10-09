@@ -6,12 +6,6 @@
 <title>{{ .Site.Title }} — the whole of PDF in Go, with no C anywhere</title>
 <meta name="description" content="go-pdfkit — read a PDF, write one, rearrange it, draw it, read it back as words and pictures, and edit it with other people. Pure Go, CGO_ENABLED=0, every library building for js/wasm, and measured against 118 863 real PDFs rather than a handful written to pass a test.">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-{{/* Ask the Dark Reader extension to stand aside. This page has its own
-     three-way theme and its own dark palette; Dark Reader recolours it on top
-     of that, which inverts a page that was already dark and leaves the brand
-     colours somewhere neither design chose. Same mechanism our Hextra fork
-     uses for the documentation. */}}
-<meta name="darkreader-lock">
 {{ partial "styles.html" . }}
 </head>
 <body class="lm">
