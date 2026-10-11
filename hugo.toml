@@ -45,6 +45,8 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
   chipBgDark = "rgba(239,68,68,.14)"
   chipBorderDark = "rgba(239,68,68,.32)"
   chipFgDark = "#f69898"
+  statsEnd = "#fbd2d2"
+  bandText = "#fce1e1"
 
 [[params.repos]]
   name = "reader"
