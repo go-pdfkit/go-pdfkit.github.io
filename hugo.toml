@@ -60,7 +60,7 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
   pkg = "github.com/go-pdfkit/ops"
   url = "https://github.com/go-pdfkit/ops"
   status = "ready"
-  blurb = "**The verbs, and the `pdfops` command.** Merge, select, delete, reverse, move, rotate, crop, resize, split, n-up, booklet, overlay, blank pages, watermarks, page numbers, Bates stamps, sanitize, flatten, compress, encrypt, decrypt, permissions, and reading a page back as text or pictures. Links and bookmarks are carried over and pointed at the pages they became. Every verb is measured on the whole corpus: 118 833 files compressed and read back **page for page identical**, 35.2 GB down to 33.6 GB."
+  blurb = "**The verbs, and the `pdfops` command** — 49 of them. Merge, select, delete, reverse, move, rotate, crop, resize, split, n-up, booklet, poster, divide, duplex, overlay, blank pages, watermarks, page numbers, Bates stamps, page labels, layers, text colour, sanitize, flatten, compress, encrypt, decrypt, permissions, repair, attachments, forms — and reading a page back as text, pictures, **tables** (CSV, JSON or Markdown) or a whole **document** in Markdown. Links and bookmarks are carried over and pointed at the pages they became. Every verb is measured on the whole corpus: 118 833 files compressed and read back **page for page identical**, 35.2 GB down to 33.6 GB."
 
 [[params.repos]]
   name = "render"
@@ -88,7 +88,14 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
   pkg = "github.com/go-pdfkit/extract"
   url = "https://github.com/go-pdfkit/extract"
   status = "ready"
-  blurb = "**Reads a page back**: the text with where each piece of it sits, and the pictures with the box each covers. A page holds instructions for drawing glyphs, not text — so where the document says nothing about what they mean, this **says so** rather than guessing. Over the whole corpus: 121 946 pages, 34 million characters, 1.89% of runs that nothing in the document could name, 300 685 pictures located, no panics."
+  blurb = "**Reads a page back**: the text with where each piece of it sits, the pictures with the box each covers, and the **grids its text lines up into**. A page holds instructions for drawing glyphs, not text — so where the document says nothing about what they mean, this **says so** rather than guessing. A column boundary is a stretch of page every row leaves empty, and three things that look like columns are not: a bullet, a column nothing was drawn in, and a page number. On one 213-page document those three took the count from 588 tables to **40**, which are the real ones; a prose report in the same run reports none. Over the whole corpus: 121 946 pages, 34 million characters, 1.89% of runs that nothing in the document could name, 300 685 pictures located, no panics."
+
+[[params.repos]]
+  name = "document"
+  pkg = "github.com/go-pdfkit/document"
+  url = "https://github.com/go-pdfkit/document"
+  status = "ready"
+  blurb = "**A PDF read back as a document rather than as text** — headings, paragraphs, lists and tables, into the [richdoc](https://github.com/go-richdoc/richdoc) model, which gets Markdown, reST and HTML out of a PDF through code the fleet already has. A page has no headings: it has glyphs at places, and everything above that is an **inference**. A heading is text set larger than the body *and* rare with it — measured over six real documents, heading sizes hold 0.01% to 5.76% of the characters and a second body size holds a third, and taking \"larger\" alone gave a nine-page report 131 headings of which 130 were prose. What it will not read is published too: ruled lines, columns of a multi-column layout, and footnotes."
 
 [[params.repos]]
   name = "coedit"
