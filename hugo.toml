@@ -60,7 +60,7 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
   pkg = "github.com/go-pdfkit/ops"
   url = "https://github.com/go-pdfkit/ops"
   status = "ready"
-  blurb = "**The verbs, and the `pdfops` command** — 49 of them. Merge, select, delete, reverse, move, rotate, crop, resize, split, n-up, booklet, poster, divide, duplex, overlay, blank pages, watermarks, page numbers, Bates stamps, page labels, layers, text colour, sanitize, flatten, compress, encrypt, decrypt, permissions, repair, attachments, forms — and reading a page back as text, pictures, **tables** (CSV, JSON or Markdown) or a whole **document** in Markdown. Links and bookmarks are carried over and pointed at the pages they became. Every verb is measured on the whole corpus: 118 833 files compressed and read back **page for page identical**, 35.2 GB down to 33.6 GB."
+  blurb = "**The verbs, and the `pdfops` command** — 53 of them, counted from its own `--help`. Merge, select, delete, reverse, move, rotate, crop, resize, split, n-up, booklet, poster, divide, duplex, overlay, blank pages, watermarks, page numbers, Bates stamps, a **placed picture** — a signature or a logo — page labels, layers, text colour, sanitize, flatten, compress, encrypt, decrypt, permissions, repair, attachments, forms — and reading a page back as text, pictures, **tables** (CSV, JSON or Markdown) or a whole **document** in Markdown. Links and bookmarks are carried over and pointed at the pages they became. Every verb is measured on the whole corpus: 118 833 files compressed and read back **page for page identical**, 35.2 GB down to 33.6 GB."
 
 [[params.repos]]
   name = "render"
