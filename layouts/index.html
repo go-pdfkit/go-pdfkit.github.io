@@ -43,7 +43,9 @@
 <span class="c-out">Measured on a page, in points, with what could not be read
 marked rather than guessed at.</span>
 <span class="c-cmd">$ pdfops images</span> paper.pdf pictures/
-<span class="c-out">a JPEG comes out a JPEG</span></pre>
+<span class="c-out">a JPEG comes out a JPEG</span>
+<span class="c-cmd">$ pdfops addfields</span> -fields fields.json blank.pdf form.pdf
+<span class="c-out">added 3 field(s)</span></pre>
     </div>
   </div></div>
 
@@ -124,6 +126,7 @@ text, _ := extract.Text(src, 1)</pre>
       <div class="card"><div class="ico">✂️</div><h3>Every embedded font is a subset</h3><p>Identity-H encoding, a per-glyph <code>/W</code> width array and a <code>/ToUnicode</code> CMap, so copy and paste still work. TrueType <code>glyf</code> outlines embed as a subsetted <code>FontFile2</code> / <code>CIDFontType2</code> with a <code>/CIDToGIDMap</code> stream; CFF and OpenType outlines embed as a <b>charstring-subsetted</b> <code>FontFile3</code> / <code>CIDFontType0</code>. Only a CID-keyed CFF or a CFF2 variable font falls back to embedding the whole table.</p></div>
       <div class="card"><div class="ico">🌍</div><h3>Shaped, where shaping is the point</h3><p><code>TextShaped</code> runs the go-opentype shaper's GSUB and GPOS tables, so Arabic joins, Indic reorders and CJK sits where it should — rather than a run of glyphs laid out left to right and called typesetting.</p></div>
       <div class="card"><div class="ico">🧩</div><h3>A widget tree, printed</h3><p><code>Page.AddWidget</code> and <code>Page.AddWidgetVector</code> put a <a href="https://github.com/go-widgets/toolkit">go-widgets/toolkit</a> tree on a page — the first as a rasterised image XObject, <b>pixel-identical to the screen</b>; the second as PDF vector operators, so fills and strokes stay crisp and the text stays selectable, a TrueType widget label's own face embedded as real Type0 text.</p></div>
+      <div class="card"><div class="ico">🗳️</div><h3>Forms, read and written</h3><p><code>pdfops fields</code> lists what a form asks for, <code>pdfops fill</code> fills it in, and <code>pdfops addfields</code> <b>creates</b> one — text, checkbox, radio, combo, list, button and signature fields, from a description. A checkbox is written with a drawing for each of its states, because <code>NeedAppearances</code> does not cover a button: one written without them is a box that never looks ticked however often it is clicked.</p></div>
       <div class="card"><div class="ico">🎯</div><h3>The same bytes twice</h3><p>The writer is deterministic: the same document written twice is the same file, which is what makes a before-and-after comparison mean anything at all.</p></div>
     </div>
   </div></section>
