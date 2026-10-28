@@ -123,7 +123,7 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
   pkg = "github.com/go-pdfkit/html2pdf"
   url = "https://github.com/go-pdfkit/html2pdf"
   status = "ready"
-  blurb = "**Static HTML to VECTOR PDF**, zero C. No headless browser and no screenshot-then-slice: it drives go-webengine's own layout tree straight into `pdfkit`'s text, rect and stroke calls, so the text in the PDF is real text — selectable, searchable, small — rather than a picture of text."
+  blurb = "**Static HTML to VECTOR PDF**, zero C. No headless browser and no screenshot-then-slice: it drives go-webengine's own layout tree straight into `pdfkit`'s text, rect and stroke calls, so the text in the PDF is real text — selectable, searchable, small — rather than a picture of text. **v0.1.0**, with a `html2pdf` command (cobra, POSIX flags, `--title`, `--author`, `--subject`, `--keywords`)."
 
 [[params.repos]]
   name = "latex"
