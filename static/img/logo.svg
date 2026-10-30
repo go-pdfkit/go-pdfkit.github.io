@@ -1,11 +1,11 @@
 <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="go-pdfkit">
   <defs>
-    <linearGradient id="pdfred" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#EF4444"/>
-      <stop offset="1" stop-color="#991B1B"/>
+    <linearGradient id="pdfkit" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#1E1B4B"/>
     </linearGradient>
   </defs>
-  <rect width="256" height="256" rx="56" fill="url(#pdfred)"/>
+  <rect width="256" height="256" rx="56" fill="url(#pdfkit)"/>
   <g fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round" stroke-width="11">
     <path d="M78 54H150L184 88V202H78Z"/>
     <path d="M150 54V88H184"/>
