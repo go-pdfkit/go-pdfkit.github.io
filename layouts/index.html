@@ -21,8 +21,18 @@
       <h1 class="head">The whole of PDF<br><span class="accent">in Go, with no C anywhere.</span></h1>
       <p class="sub">Read a file, write one, rearrange it, draw it, read it back as words and pictures, and <b>edit it with other people</b> — in a browser tab if you like, since every one of these builds for <code>js/wasm</code>. Fonts are parsed and shaped by <a href="https://github.com/go-opentype/opentype">go-opentype</a>, pages are rasterised by <a href="https://github.com/go-gfx/gfx">go-gfx</a>. Pure Go, <code>CGO_ENABLED=0</code>. BSD-3-Clause.</p>
       <div class="cta">
-        <a class="btn btn-primary" href="https://go-pdfkit.github.io/app/">{{ partial "icons/link-external.html" . }}Edit a PDF in your browser →</a>
-        <a class="btn btn-ghost" href="https://go-pdfkit.github.io/docs/">{{ partial "icons/book.html" . }}Read the documentation</a>
+        {{/* ⛔ DOCUMENTATION FIRST, as on go-richdoc, go-images and go-slides.
+             This landing had the app first and was the odd one out; the order
+             was asked for by the user through the go-slides session on
+             2026-10-26. MEASURED across the fleet before changing it: book
+             first on go-richdoc, go-images and go-slides, and only go-ooxml
+             (github first) and this page disagreed.
+
+             ⛔ The documentation link is /docs/ and NOT /docs/latest/, which
+             is 404 here. The fleet's docs sites are not uniform about this:
+             go-images serves the versioned path, this one does not. */}}
+        <a class="btn btn-primary" href="https://go-pdfkit.github.io/docs/">{{ partial "icons/book.html" . }}Read the documentation</a>
+        <a class="btn btn-ghost" href="https://go-pdfkit.github.io/app/">{{ partial "icons/link-external.html" . }}Edit a PDF in your browser →</a>
       </div>
       {{/* ⛔ DERIVED. A count typed beside the data it counts is right the day
            it is typed and has no way of staying right; the repository total
