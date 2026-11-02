@@ -33,6 +33,12 @@
              go-images serves the versioned path, this one does not. */}}
         <a class="btn btn-primary" href="https://go-pdfkit.github.io/docs/">{{ partial "icons/book.html" . }}Read the documentation</a>
         <a class="btn btn-ghost" href="https://go-pdfkit.github.io/app/">{{ partial "icons/link-external.html" . }}Edit a PDF in your browser →</a>
+        {{/* The playground and the app are DIFFERENT THINGS, and the labels say
+             so rather than leaving a reader to find out: the app is a workbench
+             you click, the playground is a recipe you TYPE, read back, and send
+             to somebody as text. Two buttons both saying "try it" would make one
+             of them a worse version of the other. */}}
+        <a class="btn btn-ghost" href="/playground/">{{ partial "icons/link-external.html" . }}Try the verbs in a playground</a>
       </div>
       {{/* ⛔ DERIVED. A count typed beside the data it counts is right the day
            it is typed and has no way of staying right; the repository total

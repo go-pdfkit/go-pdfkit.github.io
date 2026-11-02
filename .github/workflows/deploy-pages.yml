@@ -50,6 +50,19 @@ jobs:
         id: pages
         uses: actions/configure-pages@v6
 
+      # ⛔ The playground's wasm is BUILT HERE and never committed. A checked-in
+      # module is a six-megabyte binary in every clone and every diff, and it
+      # goes stale against the libraries it is built from without anything
+      # saying so. Building it in the same job that publishes the page is what
+      # keeps the two in step.
+      #
+      # The build also weighs what it produced and fails past its budget, so a
+      # dependency that drags the download up is caught here rather than by a
+      # visitor on a slow connection.
+      - name: Build the playground (wasm)
+        working-directory: playground
+        run: go run ./cmd/build
+
       - name: Build landing page
         run: hugo --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
 

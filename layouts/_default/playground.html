@@ -1,0 +1,221 @@
+{{/* The playground: a recipe on the left, the pages it produced on the right.
+
+     ⛔ TWO PANES, NOT A WORKBENCH. go-pdfkit/app is already the workbench with
+     buttons. What this adds is the thing a playground is for: something you
+     can type, read back, change one word of, and send to somebody as a link.
+
+     ⛔ EVERYTHING RUNS IN THE TAB. There is no endpoint to upload a file to —
+     not as a promise about our conduct but as a property of the build: the
+     whole tool is one wasm module and this static page. */}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Playground — {{ .Site.Title }}</title>
+<meta name="description" content="Try the go-pdfkit verbs on a PDF in your browser. Select, rotate, merge, crop, watermark, n-up — one verb a line, the same names and arguments as the Go API. The file never leaves your machine: the whole tool is one WebAssembly module and a static page.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+{{ partial "styles.html" . }}
+<style>
+  /* Colours are landingkit's tokens, never literals: the theme toggle in the
+     header changes them, and a hard-coded hex would stay light in dark mode. */
+  .pg { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 1rem; align-items: start; }
+  @media (max-width: 900px) { .pg { grid-template-columns: 1fr; } }
+  .pg-col { min-width: 0; }
+  .pg-bar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: .6rem; }
+  .pg-bar .grow { flex: 1 1 auto; }
+  #pg-src {
+    width: 100%; box-sizing: border-box; min-height: 19rem; resize: vertical;
+    font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: var(--ink); background: var(--bg); border: 1px solid var(--line);
+    border-radius: 8px; padding: .75rem .85rem; tab-size: 2;
+  }
+  #pg-src:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .pg-out { border: 1px solid var(--line); border-radius: 8px; padding: .75rem; min-height: 19rem; background: var(--bg); }
+  .pg-pages { display: flex; flex-wrap: wrap; gap: .6rem; }
+  .pg-pages img { max-width: 170px; height: auto; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+  .pg-note { font-size: .85rem; opacity: .8; margin: .5rem 0 0; }
+  .pg-err {
+    white-space: pre-wrap; border: 1px solid var(--accent); border-radius: 8px;
+    padding: .6rem .8rem; margin: 0 0 .6rem;
+    font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .pg-log { font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; opacity: .78; white-space: pre-wrap; margin: .6rem 0 0; }
+  .pg-verbs { columns: 2 14rem; font: 12px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; opacity: .85; }
+  .pg-verbs div { break-inside: avoid; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body class="lm">
+  <header class="nav"><div class="wrap">
+    <a class="brand" href="/"><img class="glyph" src="/img/logo.svg" width="32" height="32" alt="go-pdfkit logo"> go-pdfkit</a>
+    <nav><a href="/">Home</a><a href="https://go-pdfkit.github.io/docs/">Docs</a><a href="https://go-pdfkit.github.io/app/">Workbench</a></nav>
+    {{ partial "theme-toggle.html" . }}
+  </div></header>
+
+  <main class="wrap" style="padding: 2rem 0 3rem;">
+    <h1 class="head" style="margin-bottom:.4rem">Playground</h1>
+    <p class="sub" style="margin-top:0">
+      One <b>go-pdfkit verb a line</b>, with the same names and arguments as the Go API —
+      so what works here is what you write in a program. Open a PDF or use the example.
+      <b>Nothing is uploaded</b>: the whole tool is one WebAssembly module and this page.
+    </p>
+
+    <div class="pg">
+      <div class="pg-col">
+        <div class="pg-bar">
+          <button class="btn btn-primary" id="pg-run" disabled>Run</button>
+          <label class="btn btn-ghost" for="pg-file" style="cursor:pointer">Open a PDF…</label>
+          <input id="pg-file" type="file" accept="application/pdf,.pdf" hidden>
+          <button class="btn btn-ghost" id="pg-reset">Example</button>
+          <span class="grow"></span>
+          <a class="btn btn-ghost" id="pg-save" hidden download="playground.pdf">Download</a>
+        </div>
+        <textarea id="pg-src" spellcheck="false" aria-label="recipe"></textarea>
+        <p class="pg-note" id="pg-file-name">Using the built-in example document.</p>
+        <details style="margin-top:.8rem">
+          <summary style="cursor:pointer">The verbs</summary>
+          <div class="pg-verbs" id="pg-verbs" style="margin-top:.5rem"></div>
+          <p class="pg-note">
+            Page ranges are the library's own: <code>1</code>, <code>2-4</code>,
+            <code>1,3-5</code>, <code>all</code>, <code>odd</code>, <code>even</code>.
+            Lines beginning <code>#</code> are comments.
+          </p>
+        </details>
+      </div>
+
+      <div class="pg-col">
+        <pre class="pg-err" id="pg-err" hidden></pre>
+        <div class="pg-out">
+          <div class="pg-pages" id="pg-pages"></div>
+          <p class="pg-note" id="pg-status">Loading the WebAssembly module…</p>
+          <pre class="pg-log" id="pg-log" hidden></pre>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/playground/wasm_exec.js?v={{ .Site.Params.buildID | default now.Unix }}"></script>
+  <script>
+  (function () {
+    "use strict";
+    var $ = function (id) { return document.getElementById(id); };
+    var srcEl = $("pg-src"), errEl = $("pg-err"), pagesEl = $("pg-pages"),
+        statusEl = $("pg-status"), logEl = $("pg-log"), runEl = $("pg-run"),
+        saveEl = $("pg-save"), fileEl = $("pg-file"), nameEl = $("pg-file-name");
+    var current = null;   // the PDF being worked on, as a Uint8Array
+    var objectURL = null; // revoked before each replacement, or the tab leaks
+
+    function showError(msg) {
+      errEl.textContent = msg;
+      errEl.hidden = false;
+    }
+    function clearError() { errEl.hidden = true; errEl.textContent = ""; }
+
+    function b64ToBytes(b64) {
+      var bin = atob(b64), out = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) { out[i] = bin.charCodeAt(i); }
+      return out;
+    }
+
+    function render(res) {
+      pagesEl.replaceChildren();
+      // ⛔ Revoked before being replaced. Each run makes a blob URL, and a
+      // playground is used dozens of times in a sitting.
+      if (objectURL) { URL.revokeObjectURL(objectURL); objectURL = null; }
+      saveEl.hidden = true;
+
+      if (res.err) {
+        showError(res.err);
+        statusEl.textContent = "Nothing was produced.";
+      } else {
+        clearError();
+        (res.previews || []).forEach(function (p, i) {
+          var img = new Image();
+          img.src = "data:image/png;base64," + p;
+          img.alt = "page " + (i + 1);
+          img.loading = "lazy";
+          pagesEl.appendChild(img);
+        });
+        var shown = res.rendered || 0;
+        statusEl.textContent = res.pages + " page(s)" +
+          (shown < res.pages ? " — showing the first " + shown : "");
+        if (res.pdf) {
+          var blob = new Blob([b64ToBytes(res.pdf)], { type: "application/pdf" });
+          objectURL = URL.createObjectURL(blob);
+          saveEl.href = objectURL;
+          saveEl.hidden = false;
+        }
+      }
+      // The log is shown whether or not the run succeeded: on a failure it is
+      // how far it got, which is the first thing anybody wants to know.
+      var lines = res.log || [];
+      logEl.hidden = lines.length === 0;
+      logEl.textContent = lines.join("\n");
+    }
+
+    function run() {
+      if (!current) { showError("Open a PDF first, or press Example."); return; }
+      statusEl.textContent = "Running…";
+      // Deferred a frame so the status paints before the module blocks the
+      // thread. The run is synchronous: a worker is the next step, not this one.
+      requestAnimationFrame(function () {
+        try {
+          render(JSON.parse(pdfkitRun(srcEl.value, current)));
+        } catch (e) {
+          showError("the run failed: " + e);
+          statusEl.textContent = "";
+        }
+      });
+    }
+
+    function useExample() {
+      current = b64ToBytes(pdfkitSample());
+      nameEl.textContent = "Using the built-in example document.";
+      srcEl.value = pdfkitExampleRecipe;
+      run();
+    }
+
+    fileEl.addEventListener("change", function () {
+      var f = fileEl.files && fileEl.files[0];
+      if (!f) { return; }
+      f.arrayBuffer().then(function (buf) {
+        current = new Uint8Array(buf);
+        nameEl.textContent = f.name + " — " + current.length.toLocaleString() + " bytes, read in this tab only.";
+        run();
+      });
+    });
+    $("pg-reset").addEventListener("click", useExample);
+    runEl.addEventListener("click", run);
+    srcEl.addEventListener("keydown", function (e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); run(); }
+    });
+
+    var go = new Go();
+    WebAssembly.instantiateStreaming(
+      fetch("/playground/playground.wasm?v={{ .Site.Params.buildID | default now.Unix }}"),
+      go.importObject
+    ).then(function (r) {
+      go.run(r.instance);
+      // ⛔ Waits for pdfkitReady, not for instantiate to resolve. The module
+      // sets its globals from main, which runs after this promise settles, so
+      // calling pdfkitRun here would find it undefined.
+      var wait = function () {
+        if (!self.pdfkitReady) { return setTimeout(wait, 10); }
+        runEl.disabled = false;
+        var verbs = JSON.parse(pdfkitVerbs());
+        $("pg-verbs").replaceChildren.apply($("pg-verbs"), verbs.map(function (v) {
+          var d = document.createElement("div"); d.textContent = v; return d;
+        }));
+        useExample();
+      };
+      wait();
+    }).catch(function (e) {
+      showError("the playground could not start: " + e +
+        "\n\nThis page needs WebAssembly and a browser that can stream it.");
+      statusEl.textContent = "";
+    });
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+# Does the playground still work?
+#
+# ⛔ THE PAGE IS THE ARTEFACT, NOT THE PACKAGE. `go test` proves the recipe
+# engine is right; it says nothing about whether the page loads the module,
+# finds its globals and draws anything. Those have failed independently of the
+# Go code before — a stale wasm_exec.js, a global set before the function that
+# reads it, a .wasm served as octet-stream — and each of them leaves every Go
+# test green.
+#
+# So this drives a real browser at the built site and reads the DOM back.
+name: playground
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  engine:
+    name: the recipe engine
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: playground/go.mod
+      - name: Vet
+        working-directory: playground
+        run: go vet ./...
+      # ⛔ Vetted for js/wasm as well as for the host. The command that
+      # actually ships is the one behind `//go:build js && wasm`, and a host
+      # vet never compiles it.
+      - name: Vet for js/wasm
+        working-directory: playground
+        env:
+          GOOS: js
+          GOARCH: wasm
+        run: go vet ./...
+      - name: Test
+        working-directory: playground
+        run: go test -race ./...
+      - name: Build and weigh the module
+        working-directory: playground
+        run: go run ./cmd/build
+
+  page:
+    name: a real browser runs a recipe
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: playground/go.mod
+      - uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: "0.169.0"
+          extended: true
+
+      - name: Build the playground (wasm)
+        working-directory: playground
+        run: go run ./cmd/build
+
+      - name: Build the site
+        run: hugo --minify
+
+      - name: Drive it
+        working-directory: playground
+        run: go run ./cmd/pagecheck -dir ../public -chrome "$(which google-chrome || which chromium-browser || which chromium)"
