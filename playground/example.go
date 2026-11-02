@@ -9,20 +9,6 @@ import (
 	"github.com/go-pdfkit/pdfkit"
 )
 
-// ExampleRecipe is what the editor holds before anybody types.
-//
-// ⛔ IT MUST RUN AGAINST ExamplePDF, and a test asserts that it does. An
-// example that errors on first sight teaches the reader that the tool is
-// broken, which is the one lesson a playground must not open with.
-const ExampleRecipe = `# Each line is one go-pdfkit verb, with the arguments it
-# takes in Go. Page ranges are the library's own:
-#   1    2-4    1,3-5    all    odd    even
-
-select 1-6
-rotate 2,4 90
-nup 2
-`
-
 // ExamplePDF builds the document the playground starts with.
 //
 // Each page carries as many filled squares as its number, and a rule down the
