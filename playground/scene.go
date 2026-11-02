@@ -67,6 +67,12 @@ type Scene struct {
 	want     map[int]bool
 	deadline time.Time
 
+	// The open dialog, if any, and the command waiting on it.
+	dialog          *toolkit.Dialog
+	entry           *toolkit.Entry
+	pending         Command
+	confirm, cancel func()
+
 	// OpenFile and SaveFile are the browser bridges, nil in a test.
 	OpenFile func()
 	SaveFile func(name string, data []byte)
@@ -367,16 +373,31 @@ func (s *Scene) Draw(buf []byte) {
 	lbl := toolkit.NewLabel(s.status)
 	lbl.SetBounds(painter.Rect{X: 10, Y: s.h - statusH, W: s.w - 20, H: statusH})
 	lbl.Draw(p, s.theme)
+
+	// Last, and over everything: a modal that something else painted on top
+	// of would be a question the reader cannot read.
+	s.drawDialog(p)
 }
 
 func (s *Scene) Click(x, y int) bool   { return s.event(toolkit.EventClick, x, y) }
 func (s *Scene) Move(x, y int) bool    { return s.event(toolkit.EventMouseMove, x, y) }
 func (s *Scene) Release(x, y int) bool { return s.event(toolkit.EventMouseUp, x, y) }
 func (s *Scene) Context(x, y int) bool { return s.event(toolkit.EventSecondaryClick, x, y) }
-func (s *Scene) Char(str string) bool  { return false }
+
+// Char is text being typed, which only a dialog's field has any use for.
+func (s *Scene) Char(str string) bool {
+	if s.dialog == nil {
+		return false
+	}
+	s.dialog.OnEvent(toolkit.Event{Kind: toolkit.EventChar, Code: str})
+	return true
+}
 
 // KeyDown turns the keys a reader expects in a PDF viewer into commands.
 func (s *Scene) KeyDown(k string) bool {
+	if s.dialog != nil {
+		return s.dialogKey(k)
+	}
 	if s.doc == nil {
 		return false
 	}
@@ -409,6 +430,17 @@ func (s *Scene) show(n int) {
 // popups that extend well past the bounds it was laid out in.
 func (s *Scene) event(kind toolkit.EventKind, x, y int) bool {
 	ev := toolkit.Event{Kind: kind, X: x, Y: y}
+
+	// ⛔ A MODAL TAKES EVERYTHING. Letting the ribbon see a click while a
+	// dialog is open is what makes a question answerable by pressing
+	// something else, and leaves the dialog waiting on an answer that has
+	// already been given somewhere behind it.
+	if s.dialog != nil {
+		s.dialog.SetBounds(s.dialogRect())
+		s.dialog.OnEvent(ev)
+		return true
+	}
+
 	s.ribbon.SetBounds(s.ribbonRect())
 	s.ribbon.OnEvent(ev)
 	s.strip.SetBounds(s.stripRect())
