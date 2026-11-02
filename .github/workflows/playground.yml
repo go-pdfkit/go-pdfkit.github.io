@@ -1,7 +1,7 @@
 # Does the playground still work?
 #
-# ⛔ THE PAGE IS THE ARTEFACT, NOT THE PACKAGE. `go test` proves the recipe
-# engine is right; it says nothing about whether the page loads the module,
+# ⛔ THE PAGE IS THE ARTEFACT, NOT THE PACKAGE. `go test` proves the editor's
+# commands are right; it says nothing about whether the page loads the module,
 # finds its globals and draws anything. Those have failed independently of the
 # Go code before — a stale wasm_exec.js, a global set before the function that
 # reads it, a .wasm served as octet-stream — and each of them leaves every Go
@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   engine:
-    name: the recipe engine
+    name: the editor builds and its commands pass
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -48,7 +48,7 @@ jobs:
         run: go run ./cmd/build
 
   page:
-    name: a real browser runs a recipe
+    name: a real browser draws the ribbon and a page
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
