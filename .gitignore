@@ -1,3 +1,11 @@
 /public/
 /resources/
 .hugo_build.lock
+
+# ⛔ The playground's module is BUILT, never committed. It is six megabytes
+# compressed, it would land in every clone and in every diff, and a committed
+# copy goes stale against the libraries it was built from with nothing to say
+# so. The deploy workflow builds it in the same job that publishes the page,
+# which is what keeps the two in step.
+/static/playground/playground.wasm
+/static/playground/wasm_exec.js
