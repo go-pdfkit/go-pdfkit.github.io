@@ -16,6 +16,9 @@ type testHost struct {
 	dirty int
 	opens int
 	saves int
+	asked []Command
+	// answer, when set, is what this host "types" into the question.
+	answer string
 }
 
 func (h *testHost) Doc() *Doc    { return h.doc }
@@ -23,6 +26,22 @@ func (h *testHost) Say(s string) { h.said = append(h.said, s) }
 func (h *testHost) Changed()     { h.dirty++ }
 func (h *testHost) Open()        { h.opens++ }
 func (h *testHost) Save()        { h.saves++ }
+
+// AskFor answers with the default, which is the behaviour a host with no way
+// to ask should have — and is why every Ask carries one.
+func (h *testHost) AskFor(c Command) {
+	h.asked = append(h.asked, c)
+	a := h.answer
+	if a == "" {
+		a = c.Ask.Default
+	}
+	if err := c.RunWith(h.doc, a); err != nil {
+		h.Say(c.Label + ": " + err.Error())
+		return
+	}
+	h.Say(c.Label)
+	h.Changed()
+}
 
 // TestEveryRibbonButtonNamesARealCommand is the drift guard in one direction.
 //

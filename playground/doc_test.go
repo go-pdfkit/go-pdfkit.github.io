@@ -34,7 +34,7 @@ func TestEveryCommandRuns(t *testing.T) {
 	for _, c := range Commands {
 		d := opened(t)
 		before := len(d.Bytes())
-		if err := c.Run(d); err != nil {
+		if err := c.Perform(d); err != nil {
 			t.Errorf("%s: %v", c.ID, err)
 			continue
 		}
@@ -60,7 +60,7 @@ func TestEveryCommandIsUndoable(t *testing.T) {
 	for _, c := range Commands {
 		d := opened(t)
 		before := append([]byte(nil), d.Bytes()...)
-		if err := c.Run(d); err != nil {
+		if err := c.Perform(d); err != nil {
 			t.Errorf("%s: %v", c.ID, err)
 			continue
 		}
@@ -80,6 +80,41 @@ func TestEveryCommandIsUndoable(t *testing.T) {
 		}
 		if !bytes.Equal(before, d.Bytes()) {
 			t.Errorf("%s: undo did not restore the document", c.ID)
+		}
+	}
+}
+
+// TestACommandHasExactlyOneWayToRun is the invariant that keeps a dead button
+// off the ribbon.
+//
+// ⛔ A command with neither Run nor RunWith builds a button that does nothing
+// when pressed, with no error anywhere: the Action runs, calls nil, and the
+// program crashes or — worse — the nil is never reached and the press is
+// simply ignored. One with BOTH is ambiguous about which the ribbon should
+// use, and the answer would be whichever the code happened to check first.
+func TestACommandHasExactlyOneWayToRun(t *testing.T) {
+	for _, c := range Commands {
+		switch {
+		case c.Ask == nil && c.Run == nil:
+			t.Errorf("%s: no way to run it at all", c.ID)
+		case c.Ask == nil && c.RunWith != nil:
+			t.Errorf("%s: takes an answer but never asks for one", c.ID)
+		case c.Ask != nil && c.RunWith == nil:
+			t.Errorf("%s: asks a question and has nothing to do with the answer", c.ID)
+		case c.Ask != nil && c.Run != nil:
+			t.Errorf("%s: has both Run and an Ask; which should the ribbon use?", c.ID)
+		}
+		if c.Ask == nil {
+			continue
+		}
+		if c.Ask.Title == "" || c.Ask.Prompt == "" {
+			t.Errorf("%s: a question with no title or no prompt", c.ID)
+		}
+		// ⛔ The default has to be worth doing: it is what a keyboard
+		// accelerator, a script or a batch run will use, where there is
+		// nobody to ask.
+		if c.Ask.Default == "" {
+			t.Errorf("%s: no default, so a host that cannot ask has nothing to use", c.ID)
 		}
 	}
 }
@@ -112,7 +147,7 @@ func TestRotateActsOnThePageYouAreOn(t *testing.T) {
 	if !ok {
 		t.Fatal("no rotate command")
 	}
-	if err := rotate.Run(d); err != nil {
+	if err := rotate.Perform(d); err != nil {
 		t.Fatal(err)
 	}
 	rd, err := reader.Open(d.Bytes())
@@ -164,7 +199,7 @@ func TestDeletingPagesMovesTheViewBack(t *testing.T) {
 	d := opened(t)
 	d.Show(d.PageCount())
 	del, _ := CommandByID("page.delete")
-	if err := del.Run(d); err != nil {
+	if err := del.Perform(d); err != nil {
 		t.Fatal(err)
 	}
 	if d.Page() > d.PageCount() {
@@ -177,7 +212,7 @@ func TestUndoAndRedoWalkTheSameLine(t *testing.T) {
 	start := append([]byte(nil), d.Bytes()...)
 
 	rev, _ := CommandByID("page.reverse")
-	if err := rev.Run(d); err != nil {
+	if err := rev.Perform(d); err != nil {
 		t.Fatal(err)
 	}
 	reversed := append([]byte(nil), d.Bytes()...)
@@ -205,7 +240,7 @@ func TestANewChangeForgetsTheRedoTrail(t *testing.T) {
 	// never taken from here.
 	d := opened(t)
 	rev, _ := CommandByID("page.reverse")
-	if err := rev.Run(d); err != nil {
+	if err := rev.Perform(d); err != nil {
 		t.Fatal(err)
 	}
 	if err := d.Undo(); err != nil {
@@ -215,7 +250,7 @@ func TestANewChangeForgetsTheRedoTrail(t *testing.T) {
 		t.Fatal("expected a redo step")
 	}
 	del, _ := CommandByID("page.delete")
-	if err := del.Run(d); err != nil {
+	if err := del.Perform(d); err != nil {
 		t.Fatal(err)
 	}
 	if d.CanRedo() {
@@ -227,7 +262,7 @@ func TestUndoIsBounded(t *testing.T) {
 	d := opened(t)
 	rot, _ := CommandByID("page.rotate.right")
 	for i := 0; i < MaxUndo+8; i++ {
-		if err := rot.Run(d); err != nil {
+		if err := rot.Perform(d); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -257,7 +292,7 @@ func TestCommandsOnNothingAreRefusedNotCrashed(t *testing.T) {
 	// before a document does.
 	var d *Doc
 	for _, c := range Commands {
-		if err := c.Run(d); err == nil {
+		if err := c.Perform(d); err == nil {
 			t.Errorf("%s ran with no document open", c.ID)
 		}
 	}

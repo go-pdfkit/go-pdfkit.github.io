@@ -26,6 +26,10 @@ type Host interface {
 	// Open and Save go out to the browser; they are nil-safe no-ops in tests.
 	Open()
 	Save()
+	// AskFor puts the command's question to the reader and runs it with the
+	// answer. A host with no way to ask — a script, a test — may run it with
+	// the default instead, which is why every Ask has one.
+	AskFor(Command)
 }
 
 // tabs is the shape of the ribbon: which commands sit in which group of which
@@ -43,11 +47,12 @@ var tabs = []struct {
 	}},
 	{"Pages", []group{
 		{"Turn", []string{"page.rotate.left", "page.rotate.right", "page.rotate.all"}},
+		{"Choose", []string{"page.select", "page.delete.range"}},
 		{"Remove", []string{"page.delete", "doc.dropblank"}},
 		{"Arrange", []string{"page.move.up", "page.move.down", "page.reverse", "page.insert"}},
 	}},
 	{"Layout", []group{
-		{"Sheets", []string{"layout.nup2", "layout.nup4", "layout.divide"}},
+		{"Sheets", []string{"layout.nup2", "layout.nup4", "layout.nup", "layout.divide"}},
 		{"Print", []string{"layout.booklet", "layout.onepage"}},
 	}},
 	{"Document", []group{
@@ -113,6 +118,12 @@ func actions(h Host) map[string]*toolkit.Action {
 	for _, c := range Commands {
 		c := c
 		add(c.ID, c.Label, c.Tip, c.NeedsDoc, func() {
+			// A command that needs telling something asks first. The host
+			// decides how — a dialog here, the default in a test.
+			if c.Ask != nil {
+				h.AskFor(c)
+				return
+			}
 			if err := c.Run(h.Doc()); err != nil {
 				// ⛔ SAID, NOT SWALLOWED. A ribbon button that does nothing
 				// and reports nothing is the worst outcome available: the

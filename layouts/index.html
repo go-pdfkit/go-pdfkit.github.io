@@ -6,7 +6,7 @@
 <title>{{ .Site.Title }} — the whole of PDF in Go, with no C anywhere</title>
 <meta name="description" content="go-pdfkit — read a PDF, write one, rearrange it, draw it, read it back as words and pictures, and edit it with other people. Pure Go, CGO_ENABLED=0, every library building for js/wasm, and measured against 118 863 real PDFs rather than a handful written to pass a test.">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-{{ partial "styles.html" . }}
+{{ partial "styles.html" . }}{{ partial "btn-try-style.html" . }}
 </head>
 <body class="lm">
   <header class="nav"><div class="wrap">
@@ -32,13 +32,15 @@
              is 404 here. The fleet's docs sites are not uniform about this:
              go-images serves the versioned path, this one does not. */}}
         <a class="btn btn-primary" href="https://go-pdfkit.github.io/docs/">{{ partial "icons/book.html" . }}Read the documentation</a>
-        <a class="btn btn-ghost" href="https://go-pdfkit.github.io/app/">{{ partial "icons/link-external.html" . }}Edit a PDF in your browser →</a>
-        {{/* The playground and the app are DIFFERENT THINGS, and the labels say
-             so rather than leaving a reader to find out: the app is a workbench
-             you click, the playground is a recipe you TYPE, read back, and send
-             to somebody as text. Two buttons both saying "try it" would make one
-             of them a worse version of the other. */}}
-        <a class="btn btn-ghost" href="/playground/">{{ partial "icons/link-external.html" . }}Try the verbs in a playground</a>
+        {{/* ⛔ ONE "try it" BUTTON, AND IT IS THE FAMILY'S RED ONE. `btn-try`
+             is landingkit's own, the same class go-slides' hero uses, so a
+             reader moving between these landings meets the same affordance in
+             the same colour rather than learning each page separately.
+
+             There were briefly two of these side by side — the app and the
+             playground — which only made each of them the other's worse
+             version. */}}
+        <a class="btn btn-try" href="https://go-pdfkit.github.io/app/">{{ partial "icons/browser.html" . }}Edit a PDF in your browser →</a>
       </div>
       {{/* ⛔ DERIVED. A count typed beside the data it counts is right the day
            it is typed and has no way of staying right; the repository total
