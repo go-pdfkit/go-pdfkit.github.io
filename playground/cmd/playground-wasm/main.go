@@ -3,140 +3,169 @@
 
 //go:build js && wasm
 
-// Command playground-wasm is the browser half of the playground: it runs a
-// recipe over a PDF and renders the result's pages, entirely inside the tab.
+// Command playground-wasm runs the PDF editor in a browser tab.
 //
-// ⛔ NOTHING IS UPLOADED, AND THAT IS THE FEATURE. There is no endpoint to
-// send a file to, which is not a promise about our conduct but a property of
-// the build: the whole tool is this wasm module and a static page.
+// ⛔ NOTHING IS UPLOADED, AND THAT IS A PROPERTY OF THE BUILD rather than a
+// promise: the whole tool is this module and a static page, and there is no
+// endpoint for a file to go to. Opening one reads it through the browser's
+// own file input; saving one makes a blob and clicks a link at it.
 package main
 
 import (
-	"bytes"
-	"encoding/base64"
-	"encoding/json"
-	"fmt"
-	"image/png"
+	"strconv"
+	"strings"
 	"syscall/js"
 
+	"github.com/go-opentype/fonts/ibmplexsans"
 	playground "github.com/go-pdfkit/go-pdfkit.github.io/playground"
-	"github.com/go-pdfkit/reader"
-	"github.com/go-pdfkit/render"
+	"github.com/go-widgets/toolkit"
+	"github.com/go-widgets/webcanvas"
 )
 
-// previewDPI is what the pages are rasterised at for the preview. It is a
-// preview and not the artefact: the PDF the reader downloads is the vector
-// document, and this is only what is shown.
-const previewDPI = 72
+// canvasID is the element the scene is painted into.
+const canvasID = "pdf-canvas"
 
-// maxPreviewPages bounds the work one run can ask for. A recipe may turn eight
-// pages into sixty-four (divide 4 2 twice over), and rendering all of them
-// freezes the tab for no benefit — nobody reads page sixty of a preview.
-const maxPreviewPages = 12
-
-// out is the shape handed back to JavaScript. Everything the page needs is in
-// one object, so the boundary is crossed once per run.
-type out struct {
-	Pages    int      `json:"pages"`
-	Rendered int      `json:"rendered"`
-	PDF      string   `json:"pdf"`      // base64, empty on failure
-	Previews []string `json:"previews"` // base64 PNG, one per rendered page
-	Log      []string `json:"log"`
-	Err      string   `json:"err"`
-}
-
-func fail(msg string) string {
-	b, _ := json.Marshal(out{Err: msg})
-	return string(b)
-}
-
-// run is the one entry point: it takes the recipe and the PDF, and returns
-// JSON. It is deliberately a single call rather than a handle-and-methods API
-// — a playground run has no state worth keeping between presses.
-func run(this js.Value, args []js.Value) any {
-	if len(args) != 2 {
-		return fail("run takes the recipe and the PDF")
-	}
-	src := args[0].String()
-
-	in := make([]byte, args[1].Get("length").Int())
-	js.CopyBytesToGo(in, args[1])
-
-	r := playground.Run(src, in)
-	if r.Err != "" {
-		// ⛔ The log comes back even on failure: it is how far it got, which
-		// is the first thing anybody wants to know.
-		b, _ := json.Marshal(out{Err: r.Err, Log: r.Log})
-		return string(b)
-	}
-
-	o := out{
-		Pages: r.Pages,
-		Log:   r.Log,
-		PDF:   base64.StdEncoding.EncodeToString(r.PDF),
-	}
-
-	d, err := reader.Open(r.PDF)
-	if err != nil {
-		// The document was written but cannot be read back. Say so rather
-		// than showing an empty preview beside a working download button.
-		o.Err = "the result could not be re-opened for preview: " + err.Error()
-		b, _ := json.Marshal(o)
-		return string(b)
-	}
-	n := d.PageCount()
-	if n > maxPreviewPages {
-		n = maxPreviewPages
-	}
-	for p := 1; p <= n; p++ {
-		img, err := render.Page(d, p, render.Options{DPI: previewDPI})
-		if err != nil {
-			o.Log = append(o.Log, fmt.Sprintf("page %d could not be drawn: %v", p, err))
-			continue
-		}
-		// ⛔ ToNRGBA, not the raster.Image itself. go-gfx's Image deliberately
-		// is NOT an image.Image — its At returns a color.RGBA rather than a
-		// color.Color, so the hot path does no interface boxing. Converting
-		// here is the price of handing it to the standard encoder, and it is
-		// paid once per previewed page rather than once per pixel.
-		var buf bytes.Buffer
-		if err := png.Encode(&buf, img.ToNRGBA()); err != nil {
-			o.Log = append(o.Log, fmt.Sprintf("page %d could not be encoded: %v", p, err))
-			continue
-		}
-		o.Previews = append(o.Previews, base64.StdEncoding.EncodeToString(buf.Bytes()))
-	}
-	o.Rendered = len(o.Previews)
-
-	b, _ := json.Marshal(o)
-	return string(b)
-}
-
-// sample hands back the document the playground opens with, so the page works
-// before anybody has a file to try.
-func sample(this js.Value, args []js.Value) any {
-	b, err := playground.ExamplePDF()
-	if err != nil {
-		return fail("the example document could not be built: " + err.Error())
-	}
-	return base64.StdEncoding.EncodeToString(b)
-}
-
-// verbs hands back the language, generated from the table rather than typed
-// into the page, so the help cannot drift from what runs.
-func verbs(this js.Value, args []js.Value) any {
-	b, _ := json.Marshal(playground.Verbs())
-	return string(b)
-}
+// ⛔ THE INTERFACES ARE ASSERTED HERE, AT COMPILE TIME. webcanvas takes an
+// `any` and asks it for these at run time, so a method with the wrong
+// signature is not an error — it is a feature that silently never happens.
+// A `Tick() bool` instead of `Tick()` cost exactly that: the thumbnails never
+// rendered, nothing failed, and everything compiled.
+var (
+	_ webcanvas.App     = (*playground.Scene)(nil)
+	_ webcanvas.Ticker  = (*playground.Scene)(nil)
+	_ webcanvas.Resizer = (*playground.Scene)(nil)
+)
 
 func main() {
-	js.Global().Set("pdfkitRun", js.FuncOf(run))
-	js.Global().Set("pdfkitSample", js.FuncOf(sample))
-	js.Global().Set("pdfkitVerbs", js.FuncOf(verbs))
-	js.Global().Set("pdfkitExampleRecipe", js.ValueOf(playground.ExampleRecipe))
-	// ⛔ Set LAST, and only once the functions above exist. The page waits on
-	// this flag; a page that started calling pdfkitRun because the module had
-	// loaded would find the global undefined.
+	// The UI typeface. Without it every label measures as nothing and the
+	// ribbon lays out as a row of empty boxes — which looks like a layout
+	// defect and is a missing font.
+	//
+	// A parse failure leaves the toolkit's bitmap face in place rather than
+	// refusing to start: an editor that opens with plain text beats one that
+	// does not open.
+	if f, err := toolkit.NewTrueTypeFont(ibmplexsans.TTF, 14); err == nil {
+		toolkit.SetFont(f)
+	}
+	// One logical pixel is one CSS pixel, drawn at the screen's own
+	// resolution: the difference between text the browser stretches and text
+	// drawn where it is shown.
+	ratio := js.Global().Get("devicePixelRatio").Float()
+	if !(ratio >= 1) || ratio > 3 {
+		ratio = 1
+	}
+	toolkit.SetMetricScale(ratio)
+
+	s := playground.NewScene(1100, 760)
+	s.OpenFile = openFile
+	s.SaveFile = saveFile
+	s.SetDark(pageIsDark())
+
+	// ⛔ THE EXAMPLE IS LOADED HERE, IN GO, AND NOT BY THE PAGE. It was the
+	// page's job for one build, and the editor came up empty with every
+	// command greyed out: a call that crosses into JavaScript and back is one
+	// more thing between a reader and the first thing they see. Opening on a
+	// document is not a convenience — an editor that opens empty asks the
+	// reader to find a file before it has shown them anything at all.
+	if b, err := playground.ExamplePDF(); err == nil {
+		s.Load(b, "example.pdf")
+	}
+
+	// ⛔ Set before Run, which does not return. A page that began calling in
+	// before this would find the globals undefined.
+	js.Global().Set("pdfkitLoad", js.FuncOf(func(_ js.Value, args []js.Value) any {
+		if len(args) != 2 {
+			return nil
+		}
+		b := make([]byte, args[0].Get("length").Int())
+		js.CopyBytesToGo(b, args[0])
+		s.Load(b, args[1].String())
+		return nil
+	}))
+	// Kept so the page can put the example back after somebody has opened
+	// their own file, but the editor no longer depends on it to start.
+	js.Global().Set("pdfkitSample", js.FuncOf(func(js.Value, []js.Value) any {
+		if b, err := playground.ExamplePDF(); err == nil {
+			s.Load(b, "example.pdf")
+		}
+		return nil
+	}))
 	js.Global().Set("pdfkitReady", js.ValueOf(true))
-	select {} // a wasm main that returns takes its exports with it
+
+	webcanvas.Run(canvasID, s)
+}
+
+// pageIsDark asks the page which way round it is.
+//
+// It reads the COMPUTED background of the body rather than a class name or
+// the media query alone: landingkit offers light, dark and "system", and only
+// the computed colour knows which of the three the reader ended up with.
+func pageIsDark() bool {
+	doc := js.Global().Get("document")
+	if doc.IsUndefined() {
+		return false
+	}
+	body := doc.Get("body")
+	if body.IsUndefined() || body.IsNull() {
+		return false
+	}
+	style := js.Global().Call("getComputedStyle", body)
+	if style.IsUndefined() {
+		return false
+	}
+	return isDarkColour(style.Get("backgroundColor").String())
+}
+
+// isDarkColour reads an "rgb(r, g, b)" or "rgba(...)" string and says whether
+// it is closer to ink than to paper. Anything it cannot read is treated as
+// light, which is the safer default: dark widgets on a light page are much
+// harder to read than the other way round.
+func isDarkColour(css string) bool {
+	i := strings.IndexByte(css, '(')
+	j := strings.IndexByte(css, ')')
+	if i < 0 || j < i {
+		return false
+	}
+	var sum, n int
+	for _, f := range strings.Split(css[i+1:j], ",") {
+		v, err := strconv.Atoi(strings.TrimSpace(f))
+		if err != nil {
+			break
+		}
+		if n++; n > 3 {
+			break
+		}
+		sum += v
+	}
+	return n >= 3 && sum < 3*128
+}
+
+// openFile asks the page's hidden file input for a document.
+func openFile() {
+	el := js.Global().Get("document").Call("getElementById", "pdf-file")
+	if el.IsNull() || el.IsUndefined() {
+		return
+	}
+	el.Call("click")
+}
+
+// saveFile hands the document to the browser as a download.
+//
+// The blob URL is revoked once the click has been dispatched: an editor is
+// saved from many times in a sitting, and each one would otherwise hold its
+// document in memory for the life of the tab.
+func saveFile(name string, data []byte) {
+	u8 := js.Global().Get("Uint8Array").New(len(data))
+	js.CopyBytesToJS(u8, data)
+	parts := js.Global().Get("Array").New()
+	parts.Call("push", u8)
+	blob := js.Global().Get("Blob").New(parts,
+		map[string]any{"type": "application/pdf"})
+	url := js.Global().Get("URL").Call("createObjectURL", blob)
+
+	a := js.Global().Get("document").Call("createElement", "a")
+	a.Set("href", url)
+	a.Set("download", name)
+	a.Call("click")
+	js.Global().Get("URL").Call("revokeObjectURL", url)
 }
