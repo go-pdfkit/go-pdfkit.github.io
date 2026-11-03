@@ -34,13 +34,18 @@ func main() {
 	chrome := flag.String("chrome", "", "the browser binary")
 	shot := flag.String("shot", "", "keep the screenshot here (optional)")
 	budget := flag.Duration("budget", 90*time.Second, "how long the page is given")
+	// ⛔ THE DISPLAY'S PIXEL RATIO, AND IT DEFAULTED TO 1 FOREVER. That is why
+	// this check never saw the editor come up unreadable on a Retina screen:
+	// headless Chrome runs at ratio 1 unless told otherwise, so the one
+	// condition the defect needed was the one condition CI never produced.
+	dpr := flag.Float64("dpr", 1, "the device pixel ratio to run the browser at")
 	flag.Parse()
 
-	if err := check(*dir, strings.TrimSpace(*chrome), *shot, *budget); err != nil {
+	if err := check(*dir, strings.TrimSpace(*chrome), *shot, *budget, *dpr); err != nil {
 		fmt.Fprintf(os.Stderr, "pagecheck: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Println("the editor started, drew its ribbon and drew a page")
+	fmt.Printf("at a pixel ratio of %g the editor started, drew its ribbon and drew a page\n", *dpr)
 }
 
 // The window the browser is given. Large enough that the ribbon, the strip
@@ -50,9 +55,12 @@ const (
 	winH = 900
 )
 
-func check(dir, chrome, shot string, budget time.Duration) error {
+func check(dir, chrome, shot string, budget time.Duration, dpr float64) error {
 	if chrome == "" {
 		return fmt.Errorf("no browser given (-chrome)")
+	}
+	if !(dpr > 0) {
+		return fmt.Errorf("a pixel ratio of %g is not one a display has", dpr)
 	}
 	if _, err := os.Stat(dir); err != nil {
 		return fmt.Errorf("the built site is not at %s: %w", dir, err)
@@ -83,6 +91,9 @@ func check(dir, chrome, shot string, budget time.Duration) error {
 	cmd := exec.Command(chrome,
 		"--headless", "--disable-gpu", "--no-sandbox", "--hide-scrollbars",
 		fmt.Sprintf("--window-size=%d,%d", winW, winH),
+		// The screenshot comes back winW*dpr by winH*dpr, which is the point:
+		// the bands are read as fractions of the image, so they follow.
+		fmt.Sprintf("--force-device-scale-factor=%g", dpr),
 		// Virtual time lets the module download, start and paint without this
 		// program guessing a sleep.
 		fmt.Sprintf("--virtual-time-budget=%d", budget.Milliseconds()),

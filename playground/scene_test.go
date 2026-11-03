@@ -42,9 +42,10 @@ func TestTheRibbonIsActuallyDrawn(t *testing.T) {
 	buf := paint(t, s)
 
 	// Only the ribbon's own band, so ink elsewhere cannot stand in for it.
-	band := make([]byte, 0, surfaceW*ribbonH*4)
-	band = append(band, buf[:surfaceW*ribbonH*4]...)
-	if n := ink(band, surfaceW, ribbonH); n < 500 {
+	h := s.ribbonHeight()
+	band := make([]byte, 0, surfaceW*h*4)
+	band = append(band, buf[:surfaceW*h*4]...)
+	if n := ink(band, surfaceW, h); n < 500 {
 		t.Errorf("the ribbon band has %d dark pixels — it is blank", n)
 	}
 }

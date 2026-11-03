@@ -16,9 +16,7 @@ import (
 	"strings"
 	"syscall/js"
 
-	"github.com/go-opentype/fonts/ibmplexsans"
 	playground "github.com/go-pdfkit/go-pdfkit.github.io/playground"
-	"github.com/go-widgets/toolkit"
 	"github.com/go-widgets/webcanvas"
 )
 
@@ -31,9 +29,10 @@ const canvasID = "pdf-canvas"
 // A `Tick() bool` instead of `Tick()` cost exactly that: the thumbnails never
 // rendered, nothing failed, and everything compiled.
 var (
-	_ webcanvas.App     = (*playground.Scene)(nil)
-	_ webcanvas.Ticker  = (*playground.Scene)(nil)
-	_ webcanvas.Resizer = (*playground.Scene)(nil)
+	_ webcanvas.App             = (*playground.Scene)(nil)
+	_ webcanvas.Ticker          = (*playground.Scene)(nil)
+	_ webcanvas.Resizer         = (*playground.Scene)(nil)
+	_ webcanvas.PixelRatioAware = (*playground.Scene)(nil)
 )
 
 func main() {
@@ -44,18 +43,18 @@ func main() {
 	// A parse failure leaves the toolkit's bitmap face in place rather than
 	// refusing to start: an editor that opens with plain text beats one that
 	// does not open.
-	if f, err := toolkit.NewTrueTypeFont(ibmplexsans.TTF, 14); err == nil {
-		toolkit.SetFont(f)
-	}
-	// One logical pixel is one CSS pixel, drawn at the screen's own
-	// resolution: the difference between text the browser stretches and text
-	// drawn where it is shown.
-	ratio := js.Global().Get("devicePixelRatio").Float()
-	if !(ratio >= 1) || ratio > 3 {
-		ratio = 1
-	}
-	toolkit.SetMetricScale(ratio)
-
+	playground.UseUIFont(1)
+	// ⛔ THE RATIO IS NOT READ HERE ANY MORE, and that is the fix. This used to
+	// read window.devicePixelRatio and call toolkit.SetMetricScale with it —
+	// behind webcanvas's back, which went on sizing the canvas in CSS pixels
+	// because the scene did not claim to want device ones. Every widget was
+	// drawn twice as large onto a surface that had not grown, so on a Retina
+	// display the ribbon covered the page and there was nothing to see.
+	//
+	// The scene implements webcanvas.PixelRatioAware instead, so webcanvas
+	// tells it the ratio, sizes the backing store, and tells it AGAIN when a
+	// zoom or another display changes it. A number read once at startup could
+	// never have followed that.
 	s := playground.NewScene(1100, 760)
 	s.OpenFile = openFile
 	s.SaveFile = saveFile

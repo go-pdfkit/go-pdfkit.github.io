@@ -67,6 +67,15 @@ jobs:
       - name: Build the site
         run: hugo --minify
 
-      - name: Drive it
+      # ⛔ AT BOTH PIXEL RATIOS. Headless Chrome runs at 1 unless told
+      # otherwise, so for as long as this ran once it could only ever see the
+      # display nobody has a problem with. The editor came up unreadable on
+      # every Retina screen — the bands were raw numbers while every widget
+      # was drawn twice as large — and this check was green throughout.
+      - name: Drive it on an ordinary display
         working-directory: playground
-        run: go run ./cmd/pagecheck -dir ../public -chrome "$(which google-chrome || which chromium-browser || which chromium)"
+        run: go run ./cmd/pagecheck -dir ../public -dpr 1 -chrome "$(which google-chrome || which chromium-browser || which chromium)"
+
+      - name: Drive it on a Retina display
+        working-directory: playground
+        run: go run ./cmd/pagecheck -dir ../public -dpr 2 -chrome "$(which google-chrome || which chromium-browser || which chromium)"
