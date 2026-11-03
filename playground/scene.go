@@ -7,29 +7,57 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/go-opentype/fonts/ibmplexsans"
 	"github.com/go-pdfkit/reader"
 	"github.com/go-pdfkit/render"
 	"github.com/go-widgets/painter"
 	"github.com/go-widgets/toolkit"
 )
 
-// The surface the scene is laid out on before the page says how big it is.
+// The surface the scene is laid out on before the page says how big it is, in
+// LOGICAL pixels — one CSS pixel each.
 const (
 	surfaceW = 1100
 	surfaceH = 760
 )
 
-// railW is the width of the thumbnail strip, and thumbW the width a
-// thumbnail is drawn at.
+// ⛔ EVERY LENGTH BELOW IS LOGICAL AND GOES THROUGH toolkit.Scaled. On a
+// Retina display the toolkit's metric scale is 2, so every widget draws twice
+// as large; a band whose height is a raw 128 is then a quarter of the room its
+// contents need, and what a reader sees is a ribbon spilling over a page that
+// has been pushed off the bottom. That is exactly what this editor did, and
+// the reason it is written down here is that nothing fails: the layout is
+// wrong only on the machines nobody tests on.
+//
+// railW is the width of the thumbnail strip, thumbW the width a thumbnail is
+// drawn at, and thumbDPI the resolution that makes a page that wide.
 //
 // ⛔ THE THUMBNAIL IS DRAWN AT THE SIZE IT IS SHOWN. PageStrip scales what it
 // is given with nearest-neighbour, so handing it a big bitmap does not buy a
-// sharper card — it buys a blurrier one and the memory to go with it.
+// sharper card — it buys a blurrier one and the memory to go with it. At a
+// ratio of 2 the card IS twice as wide in real pixels, so the resolution
+// follows it; that is not the same mistake.
 const (
 	railW    = 150
 	thumbW   = 118
 	thumbDPI = 14 // ~118 px across an A4 page
+	statusH  = 26
+	// gutter is the space between the page and what is around it, and pad the
+	// inset of the status line's text.
+	gutter = 12
+	pad    = 10
 )
+
+// Scaled lengths. Functions, not constants: the metric scale is installed when
+// the page says what display it is on, which is after this file is compiled
+// and after the package's vars are initialised.
+func railWidth() int  { return toolkit.Scaled(railW) }
+func thumbWidth() int { return toolkit.Scaled(thumbW) }
+func statusHeight() int {
+	// The status line holds one line of text, so it follows the face like
+	// every other band — a fixed 26 clips the moment the type grows.
+	return max(toolkit.Scaled(statusH), toolkit.CurrentFont().Height()+toolkit.Scaled(8))
+}
 
 // How long drawing may take. Measured in render.Options' own doc comment: of
 // 59 432 corpus pages, 1 131 were still being drawn after twenty seconds and
@@ -42,6 +70,29 @@ const (
 	// hundred-page document does not freeze the first frame.
 	frameBudget = 120 * time.Millisecond
 )
+
+// uiFontPx is the logical size the editor sets its text at; UseUIFont
+// multiplies it by the display's pixel ratio.
+const uiFontPx = 14
+
+// UseUIFont installs the UI typeface at the given scale.
+//
+// ⛔ THE FACE IS PART OF THE SCALE. Installing it once at 14 and then doubling
+// every metric leaves the type the only thing on the surface that did not
+// grow: labels that fitted their controls at 1x rattle around inside them at
+// 2x, and a ribbon measured from its font lays out for a face it is not
+// drawing with.
+//
+// A parse failure leaves whatever face is installed rather than refusing to
+// start: an editor that opens with plain text beats one that does not open.
+func UseUIFont(scale float64) {
+	if !(scale > 0) {
+		scale = 1
+	}
+	if f, err := toolkit.NewTrueTypeFont(ibmplexsans.TTF, int(float64(uiFontPx)*scale+0.5)); err == nil {
+		toolkit.SetFont(f)
+	}
+}
 
 // Scene is the whole editor: the widget tree, the document, and the bridge
 // out to the browser for opening and saving.
@@ -292,7 +343,11 @@ func (s *Scene) thumb(i int) bool {
 		return false
 	}
 	img, err := render.Page(s.rendered, i+1, render.Options{
-		DPI:         thumbDPI,
+		// ⛔ At the DISPLAY's resolution. The card is physically wider on a
+		// Retina screen, so a bitmap made at the logical DPI is one the strip
+		// scales up with nearest-neighbour — a blurrier card than the one a
+		// reader would have had at 1x.
+		DPI:         thumbDPI * toolkit.MetricScale(),
 		MaxDuration: thumbBudget,
 	})
 	if err != nil {
@@ -308,12 +363,56 @@ func (s *Scene) thumb(i int) bool {
 
 func (s *Scene) Size() (int, int) { return s.w, s.h }
 
-func (s *Scene) Resize(w, h int) (int, int) {
-	if w < 320 {
-		w = 320
+// SetPixelRatio tells the editor how many device pixels the display puts in a
+// CSS pixel, and is webcanvas's [PixelRatioAware] contract.
+//
+// ⛔ IMPLEMENTING IT IS THE WHOLE FIX. A scene that omits this interface is
+// handed CSS pixels and its canvas is sized in CSS pixels — webcanvas says so
+// outright — and this editor omitted it while its wasm shell called
+// SetMetricScale(devicePixelRatio) behind webcanvas's back. Every widget was
+// therefore drawn twice as large onto a surface that had not grown, so on a
+// Retina display the ribbon covered the page and there was nothing to see.
+//
+// Saying so here instead gets the rest for free: webcanvas sizes the backing
+// store to the CSS box times the ratio, hands Resize DEVICE pixels, and calls
+// this again when the ratio changes — a browser zoom, or a window dragged to a
+// display of another density. The shell's own call could not do that: it read
+// the ratio once, at startup.
+func (s *Scene) SetPixelRatio(ratio float64) {
+	if !(ratio > 0) { // also catches NaN
+		ratio = 1
 	}
-	if h < 240 {
-		h = 240
+	if ratio == toolkit.MetricScale() {
+		return
+	}
+	toolkit.SetMetricScale(ratio)
+	// The face is installed at the scale as well, or the type stays the size it
+	// was while everything around it grows.
+	UseUIFont(ratio)
+	// ⛔ ThumbSize is NOT touched: PageStrip says it is a LOGICAL width and
+	// scales it itself, so setting it to a scaled number would apply the ratio
+	// twice and give a card four times the area at ratio 2.
+	//
+	// What does have to follow is the resolution the pictures are drawn at. A
+	// card that is physically twice as wide showing a bitmap made for a 1x
+	// card is the one case where a bigger card really is a blurrier one, so
+	// every page already drawn is marked stale and asked for again — the old
+	// bitmap stays on screen until its replacement arrives.
+	if s.strip != nil {
+		s.strip.InvalidateAll()
+		s.want = map[int]bool{}
+	}
+}
+
+func (s *Scene) Resize(w, h int) (int, int) {
+	// ⛔ The floor is in DEVICE pixels, so it follows the ratio too: a 320 that
+	// did not would refuse a window that is 320 CSS pixels wide on a Retina
+	// display and lay the editor out at twice the size of the canvas.
+	if min := toolkit.Scaled(320); w < min {
+		w = min
+	}
+	if min := toolkit.Scaled(240); h < min {
+		h = min
 	}
 	if w == s.w && h == s.h {
 		return s.w, s.h
@@ -327,22 +426,25 @@ func (s *Scene) Resize(w, h int) (int, int) {
 // Bounds of the three regions. They are computed rather than stored so that a
 // resize cannot leave one of them describing the old window.
 func (s *Scene) ribbonRect() painter.Rect {
-	return painter.Rect{X: 0, Y: 0, W: s.w, H: ribbonH}
+	return painter.Rect{X: 0, Y: 0, W: s.w, H: s.ribbonHeight()}
 }
 
 func (s *Scene) stripRect() painter.Rect {
-	return painter.Rect{X: 0, Y: ribbonH, W: railW, H: s.h - ribbonH - statusH}
+	top := s.ribbonHeight()
+	return painter.Rect{X: 0, Y: top, W: railWidth(), H: s.h - top - statusHeight()}
 }
 
 func (s *Scene) pageRect() painter.Rect {
-	return painter.Rect{X: railW + 12, Y: ribbonH + 12,
-		W: s.w - railW - 24, H: s.h - ribbonH - statusH - 24}
+	top, g := s.ribbonHeight(), toolkit.Scaled(gutter)
+	return painter.Rect{X: railWidth() + g, Y: top + g,
+		W: s.w - railWidth() - 2*g, H: s.h - top - statusHeight() - 2*g}
 }
 
-const (
-	ribbonH = 128
-	statusH = 26
-)
+// ribbonHeight is ASKED OF THE RIBBON rather than fixed at 128. The ribbon
+// works its height out from its own metrics — the tab strip, the body, the
+// group labels — so it is the only answer that cannot disagree with what is
+// painted, and it follows the metric scale for nothing.
+func (s *Scene) ribbonHeight() int { return s.ribbon.Height() }
 
 func (s *Scene) Draw(buf []byte) {
 	// ⛔ THE BACKGROUND IS PAINTED FIRST, AND THAT IS NOT DECORATION. The host
@@ -371,7 +473,8 @@ func (s *Scene) Draw(buf []byte) {
 	}
 
 	lbl := toolkit.NewLabel(s.status)
-	lbl.SetBounds(painter.Rect{X: 10, Y: s.h - statusH, W: s.w - 20, H: statusH})
+	ins, sh := toolkit.Scaled(pad), statusHeight()
+	lbl.SetBounds(painter.Rect{X: ins, Y: s.h - sh, W: s.w - 2*ins, H: sh})
 	lbl.Draw(p, s.theme)
 
 	// Last, and over everything: a modal that something else painted on top
