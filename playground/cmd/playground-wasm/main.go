@@ -12,8 +12,6 @@
 package main
 
 import (
-	"strconv"
-	"strings"
 	"syscall/js"
 
 	playground "github.com/go-pdfkit/go-pdfkit.github.io/playground"
@@ -58,7 +56,7 @@ func main() {
 	s := playground.NewScene(1100, 760)
 	s.OpenFile = openFile
 	s.SaveFile = saveFile
-	s.SetDark(pageIsDark())
+	followPageTheme(s)
 
 	// ⛔ THE EXAMPLE IS LOADED HERE, IN GO, AND NOT BY THE PAGE. It was the
 	// page's job for one build, and the editor came up empty with every
@@ -94,6 +92,60 @@ func main() {
 	webcanvas.Run(canvasID, s)
 }
 
+// followPageTheme keeps the canvas in step with the page around it, and goes on
+// doing so.
+//
+// ⛔ A VALUE READ ONCE AT START-UP CANNOT FOLLOW A CHANGE. This is the same
+// mistake the pixel ratio made seven lines above, left standing for the theme:
+// SetDark was called once in main and never again, so a reader who pressed the
+// theme toggle, or whose machine turned dark at sunset, kept a light ribbon in a
+// dark page until they reloaded.
+//
+// There are TWO sources and the kit's default state only reacts to the second:
+//
+//   - data-theme on <html>, which is what landingkit's three-state toggle
+//     writes when the reader chooses light or dark;
+//   - prefers-color-scheme, which is what "system" — the default — resolves
+//     through, and which changes with no gesture on the page at all.
+//
+// Neither is read directly. pageIsDark reads the COMPUTED background, so
+// whichever of the two moved, and whatever the sheet does with it, the answer
+// is the colour actually painted. Both listeners simply ask again.
+//
+// go-slides does this from the page instead, pushing the computed palette into
+// the module (goSlidesSetPalette). In Go it travels with the binary, so a page
+// that embeds this playground gets it without copying any script.
+//
+// The callbacks are never released, which is correct: they live as long as the
+// page does, and a released js.Func called from JavaScript panics.
+func followPageTheme(s *playground.Scene) {
+	sync := func() { s.SetDark(pageIsDark()) }
+	sync()
+	again := js.FuncOf(func(js.Value, []js.Value) any { sync(); return nil })
+
+	doc := js.Global().Get("document")
+	if obs := js.Global().Get("MutationObserver"); obs.Truthy() && doc.Truthy() {
+		if root := doc.Get("documentElement"); root.Truthy() {
+			obs.New(again).Call("observe", root, map[string]any{
+				"attributes":      true,
+				"attributeFilter": []any{"data-theme"},
+			})
+		}
+	}
+	if js.Global().Get("matchMedia").Truthy() {
+		q := js.Global().Call("matchMedia", "(prefers-color-scheme: dark)")
+		// addEventListener on a MediaQueryList is the modern spelling; Safari
+		// before 14 had only addListener, and a browser with neither simply does
+		// not follow the system — it still starts on the right colour.
+		switch {
+		case q.Get("addEventListener").Truthy():
+			q.Call("addEventListener", "change", again)
+		case q.Get("addListener").Truthy():
+			q.Call("addListener", again)
+		}
+	}
+}
+
 // pageIsDark asks the page which way round it is.
 //
 // It reads the COMPUTED background of the body rather than a class name or
@@ -112,31 +164,7 @@ func pageIsDark() bool {
 	if style.IsUndefined() {
 		return false
 	}
-	return isDarkColour(style.Get("backgroundColor").String())
-}
-
-// isDarkColour reads an "rgb(r, g, b)" or "rgba(...)" string and says whether
-// it is closer to ink than to paper. Anything it cannot read is treated as
-// light, which is the safer default: dark widgets on a light page are much
-// harder to read than the other way round.
-func isDarkColour(css string) bool {
-	i := strings.IndexByte(css, '(')
-	j := strings.IndexByte(css, ')')
-	if i < 0 || j < i {
-		return false
-	}
-	var sum, n int
-	for _, f := range strings.Split(css[i+1:j], ",") {
-		v, err := strconv.Atoi(strings.TrimSpace(f))
-		if err != nil {
-			break
-		}
-		if n++; n > 3 {
-			break
-		}
-		sum += v
-	}
-	return n >= 3 && sum < 3*128
+	return playground.IsDarkColour(style.Get("backgroundColor").String())
 }
 
 // openFile asks the page's hidden file input for a document.
