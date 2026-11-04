@@ -79,3 +79,14 @@ jobs:
       - name: Drive it on a Retina display
         working-directory: playground
         run: go run ./cmd/pagecheck -dir ../public -dpr 2 -chrome "$(which google-chrome || which chromium-browser || which chromium)"
+
+      # ⛔ THE THEME IS A THING THAT CHANGES, so it needs a check that changes
+      # it. pagecheck above photographs the page once, which cannot see whether
+      # the canvas FOLLOWS the reader's toggle or the machine turning dark at
+      # sunset — both of which it did not, until the listeners went in. This one
+      # speaks the DevTools protocol, because no command-line flag says "the
+      # machine is in dark mode" and the page resolves "system" through exactly
+      # that media feature.
+      - name: It follows the system setting and the reader's toggle
+        working-directory: playground
+        run: go run ./cmd/themecheck -dir ../public -chrome "$(which google-chrome || which chromium-browser || which chromium)"
