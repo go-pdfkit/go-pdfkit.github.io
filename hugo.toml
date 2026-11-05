@@ -84,6 +84,13 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
   blurb = "**Pictures into a PDF, and a PDF back into pictures.** Reads PNG, JPEG, GIF, BMP, TIFF, WebP and PSD, and writes all of those but PSD — which it refuses **by name**, because writing a layered document is a different job and a PNG under a `.psd` name would be worse than saying no. **WebP writes in both of its codecs**: quality 100 is the lossless one, half the size of PNG on a rasterised page of text; below that the lossy one, 12× smaller again on a detailed page. The **content** decides a format, never the file's name. Only the **DPI** says which page a picture is: 2480×3508 is A4 at 300 and a page a metre tall at 72. Fitting onto paper uses **one scale for both axes** and only ever shrinks."
 
 [[params.repos]]
+  name = "doc2pdf"
+  pkg = "github.com/go-pdfkit/doc2pdf"
+  url = "https://github.com/go-pdfkit/doc2pdf"
+  status = "ready"
+  blurb = "**Any document into a PDF, from a shell.** `doc2pdf report.docx` — Word, Excel, PowerPoint, OpenDocument Text, Markdown, reStructuredText, HTML, plain text, CSV, JSON, XML, EPUB, MOBI, FictionBook and email, through [richdoc](https://github.com/go-richdoc/richdoc) and `document`. Pure Go, CGO-free, no TeX. It exists because **thirteen libraries were finished, tested, released and unusable from a shell**: measured across thirty repositories of this fleet, four shipped a command and twenty-five did not, and a reader nothing can call is in a different state from an unfinished one — easy to mistake for it. ⛔ **Nothing is fetched.** A document arrives from something somebody was handed and its images carry URLs the *author* chose; following them would make every conversion a request to an address of their choosing, from the converting machine. What was refused is **printed**, because a page with holes in it must not be silent. A failure names the **reader** — thirteen libraries stand behind it and \"cannot read it\" sends you to the wrong one — and every reader in the table is held by a test that converts a real file of that format."
+
+[[params.repos]]
   name = "extract"
   pkg = "github.com/go-pdfkit/extract"
   url = "https://github.com/go-pdfkit/extract"
