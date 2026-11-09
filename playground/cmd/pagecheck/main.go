@@ -86,8 +86,45 @@ func check(dir, chrome, shot string, budget time.Duration, dpr float64) error {
 	}
 	defer os.RemoveAll(tmp)
 	out := filepath.Join(tmp, "shot.png")
-
 	url := fmt.Sprintf("http://%s/playground/", ln.Addr().String())
+
+	// ⛔⛔ PHOTOGRAPHED AGAIN BEFORE IT IS CALLED A FAILURE, and the budget is
+	// doubled each time. A virtual-time budget lets the module download, start
+	// and paint without this program guessing a sleep — but instantiating a wasm
+	// module and rendering a page are REAL CPU work, which virtual time does not
+	// wait for. At a pixel ratio of 2 there are four times the pixels to draw,
+	// and on 2026-11-09 this check failed there alone, on a branch that had
+	// changed one line of unrelated HTML: ribbon 0.4 %, strip full of real
+	// paper, page area 0.064 % against a floor of 0.1 %. The editor had started
+	// and the page was simply still arriving.
+	//
+	// A check whose answer depends on how fast the machine is that day is
+	// measuring the machine. A page that is genuinely blank is blank on every
+	// attempt, so retrying cannot turn a real failure green — it can only stop
+	// a slow one from reading as a defect.
+	var last error
+	for attempt, give := 1, budget; attempt <= shots; attempt, give = attempt+1, give*2 {
+		img, err := shoot(chrome, url, out, shot, give, dpr)
+		if err != nil {
+			return err
+		}
+		if last = judge(img); last == nil {
+			if attempt > 1 {
+				fmt.Printf("drawn on attempt %d, with %s of virtual time\n", attempt, give)
+			}
+			return nil
+		}
+		fmt.Printf("attempt %d of %d: %v\n", attempt, shots, last)
+	}
+	return last
+}
+
+// shots is how many times the page is photographed before the last answer
+// stands.
+const shots = 3
+
+// shoot runs the browser once and decodes what it wrote.
+func shoot(chrome, url, out, shot string, budget time.Duration, dpr float64) (image.Image, error) {
 	cmd := exec.Command(chrome,
 		"--headless", "--disable-gpu", "--no-sandbox", "--hide-scrollbars",
 		fmt.Sprintf("--window-size=%d,%d", winW, winH),
@@ -111,9 +148,9 @@ func check(dir, chrome, shot string, budget time.Duration, dpr float64) error {
 	f, err := os.Open(out)
 	if err != nil {
 		if runErr != nil {
-			return fmt.Errorf("the browser failed and wrote no screenshot: %w", runErr)
+			return nil, fmt.Errorf("the browser failed and wrote no screenshot: %w", runErr)
 		}
-		return fmt.Errorf("the browser wrote no screenshot: %w", err)
+		return nil, fmt.Errorf("the browser wrote no screenshot: %w", err)
 	}
 	if runErr != nil {
 		fmt.Printf("note: the browser exited %v after writing the screenshot; judging the image\n", runErr)
@@ -121,14 +158,14 @@ func check(dir, chrome, shot string, budget time.Duration, dpr float64) error {
 	defer f.Close()
 	img, err := png.Decode(f)
 	if err != nil {
-		return fmt.Errorf("the screenshot will not decode: %w", err)
+		return nil, fmt.Errorf("the screenshot will not decode: %w", err)
 	}
 	if shot != "" {
 		if b, err := os.ReadFile(out); err == nil {
 			_ = os.WriteFile(shot, b, 0o644)
 		}
 	}
-	return judge(img)
+	return img, nil
 }
 
 // judge decides whether what was drawn is an editor.
