@@ -50,19 +50,24 @@ jobs:
         id: pages
         uses: actions/configure-pages@v6
 
-      # ⛔ The playground's wasm is BUILT HERE and never committed. A checked-in
-      # module is a six-megabyte binary in every clone and every diff, and it
-      # goes stale against the libraries it is built from without anything
-      # saying so. Building it in the same job that publishes the page is what
-      # keeps the two in step.
+      # ⛔ THERE IS NO WASM TO BUILD HERE ANY MORE. This repository carried a
+      # second PDF editor — its own ribbon, its own thumbnails, its own
+      # dialogs — published at /playground/ beside the workbench at /app/. The
+      # hero's own comment had already said what that cost: "There were briefly
+      # two of these side by side — the app and the playground — which only
+      # made each of them the other's worse version."
       #
-      # The build also weighs what it produced and fails past its budget, so a
-      # dependency that drags the download up is caught here rather than by a
-      # visitor on a slow connection.
-      - name: Build the playground (wasm)
-        working-directory: playground
-        run: go run ./cmd/build
-
+      # It was the worse version by the time it went: no icons on any of its
+      # controls (its toolkit.Action was built with no Icon field at all, and
+      # its tooltips were discarded with `_ = tip`), and a page off by one when
+      # a reader pressed a minipage. Both were reported by somebody using it.
+      # The workbench has neither, and has a browser check at two pixel ratios
+      # that would have caught them.
+      #
+      # The editor is now one implementation, in go-pdfkit/playground, served
+      # at /playground/ as every other org in the fleet serves its own —
+      # go-filesystems/playground, go-notebook/playground,
+      # go-wasmcontainers/playground.
       - name: Build landing page
         run: hugo --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
 
