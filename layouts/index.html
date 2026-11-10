@@ -19,7 +19,13 @@
   <div class="hero"><div class="wrap">
     <div>
       <h1 class="head">The whole of PDF<br><span class="accent">in Go, with no C anywhere.</span></h1>
-      <p class="sub">Read a file, write one, rearrange it, draw it, read it back as words and pictures, and <b>edit it with other people</b> — in a browser tab if you like, since every one of these builds for <code>js/wasm</code>. Fonts are parsed and shaped by <a href="https://github.com/go-opentype/opentype">go-opentype</a>, pages are rasterised by <a href="https://github.com/go-gfx/gfx">go-gfx</a>. Pure Go, <code>CGO_ENABLED=0</code>. BSD-3-Clause.</p>
+      <p class="sub">Read a file, write one, rearrange it, draw it, read it back as words and pictures, and <b>edit it with other people</b> — in a browser tab if you like, since every one of these builds for <code>js/wasm</code>. Fonts are parsed and shaped by <a href="https://github.com/go-opentype/opentype">go-opentype</a>, pages are rasterised by <a href="https://github.com/go-gfx/gfx">go-gfx</a>.</p>
+      {{/* ⛔ THE MANTRA STRIP ABOVE ALREADY SAYS IT. This sentence ended
+           "Pure Go, CGO_ENABLED=0. BSD-3-Clause." — two chips' worth of words,
+           a screen's length below the chips themselves, and the page went on to
+           say both again twice more. landingkit has the question to ask
+           (partials/mantra-on.html) precisely so a landing says it ONLY when
+           the strip is off; this landing had never asked it. */}}
       <div class="cta">
         {{/* ⛔ DOCUMENTATION FIRST, as on go-richdoc, go-images and go-slides.
              This landing had the app first and was the odd one out; the order
@@ -154,11 +160,15 @@ text, _ := extract.Text(src, 1)</pre>
   <section id="eco" style="padding-top:6px"><div class="wrap">
     <div class="band">
       <h2>100 % statement coverage, including the branches that report a bad file.</h2>
-      <p>And it <b>runs</b> on {{ len .Site.Params.arches }} architectures, not merely compiles for them. Pure Go, cgo disabled, BSD-3-Clause.</p>
+      <p>And it <b>runs</b> on {{ len .Site.Params.arches }} architectures, not merely compiles for them.{{ if not (partial "mantra-on.html" .) }} Pure Go, cgo disabled, BSD-3-Clause.{{ end }}</p>
       <a class="btn btn-ghost" href="https://github.com/go-pdfkit">{{ partial "icons/github.html" . }}Read the source on GitHub →</a>
     </div>
   </div></section>
 
-  <footer><div class="wrap"><span>© the go-pdfkit authors · BSD-3-Clause</span><span>Pure Go · CGO_ENABLED=0 · every library builds for js/wasm</span></div></footer>
+  {{/* The idiom landingkit's mantra-on.html documents, used here as written:
+       the footer says the licence and the cgo setting only when the strip at
+       the top is not already saying them. What is left either way is the one
+       claim the strip does NOT make — that every library builds for js/wasm. */}}
+  <footer><div class="wrap"><span>© the go-pdfkit authors{{ if not (partial "mantra-on.html" .) }} · BSD-3-Clause{{ end }}</span><span>{{ if not (partial "mantra-on.html" .) }}Pure Go · CGO_ENABLED=0 · {{ end }}every library builds for js/wasm</span></div></footer>
 </body>
 </html>
