@@ -20,30 +20,8 @@
     <div>
       <h1 class="head">The whole of PDF<br><span class="accent">in Go, with no C anywhere.</span></h1>
       <p class="sub">Read a file, write one, rearrange it, draw it, read it back as words and pictures, and <b>edit it with other people</b> — in a browser tab if you like, since every one of these builds for <code>js/wasm</code>. Fonts are parsed and shaped by <a href="https://github.com/go-opentype/opentype">go-opentype</a>, pages are rasterised by <a href="https://github.com/go-gfx/gfx">go-gfx</a>. {{ if not (partial "mantra-on.html" $) }}Pure Go, <code>CGO_ENABLED=0</code>.{{ end }} {{ if not (partial "mantra-on.html" $) }}BSD-3-Clause.{{ end }}</p>
-      <div class="cta">
-        {{/* ⛔ DOCUMENTATION FIRST, as on go-richdoc, go-images and go-slides.
-             This landing had the app first and was the odd one out; the order
-             was asked for by the user through the go-slides session on
-             2026-10-26. MEASURED across the fleet before changing it: book
-             first on go-richdoc, go-images and go-slides, and only go-ooxml
-             (github first) and this page disagreed.
-
-             ⛔ The documentation link is /docs/ and NOT /docs/latest/, which
-             is 404 here. The fleet's docs sites are not uniform about this:
-             go-images serves the versioned path, this one does not. */}}
-        <a class="btn btn-primary" href="https://go-pdfkit.github.io/docs/">{{ partial "icons/book.html" . }}Read the documentation</a>
-        {{/* ⛔ ONE "try it" BUTTON, AND IT IS THE FAMILY'S RED ONE. `btn-try`
-             is landingkit's own, the same class go-slides' hero uses, so a
-             reader moving between these landings meets the same affordance in
-             the same colour rather than learning each page separately.
-
-             There were briefly two of these side by side — the app and the
-             playground — which only made each of them the other's worse
-             version. The second one is gone: the workbench IS the playground
-             now, at the address every other org in the fleet uses for the
-             thing you can open in a tab. */}}
-        <a class="btn btn-try" href="https://go-pdfkit.github.io/playground/">{{ partial "icons/browser.html" . }}Edit a PDF in your browser →</a>
-      </div>
+      {{/* [[params.cta]] in hugo.toml: the kit renders the row */}}
+      {{ partial "cta.html" . }}
       {{/* ⛔ DERIVED. A count typed beside the data it counts is right the day
            it is typed and has no way of staying right; the repository total
            comes from the list itself.
