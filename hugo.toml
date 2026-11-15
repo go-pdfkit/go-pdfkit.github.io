@@ -159,3 +159,20 @@ disableKinds = ["taxonomy", "term", "RSS", "sitemap", "404"]
   url = "https://github.com/go-pdfkit/pdfkit"
   status = "ready"
   blurb = "**The document builder**: pages, vector graphics, and text set in embedded, subsetted fonts. TrueType and OpenType/CFF embed as **Type0 (Identity-H)** composite fonts with a `/ToUnicode` CMap; JPEG and raster images place directly; a **widget bridge** prints a [go-widgets](https://github.com/go-widgets/toolkit) tree onto a page, rasterised or as selectable vector text. With the zero `Options` the output has no timestamps and a content-derived `/ID`, so identical inputs produce byte-identical PDFs."
+
+[[params.repos]]
+  name = "bentogap"
+  pkg = "github.com/go-pdfkit/bentogap"
+  url = "https://github.com/go-pdfkit/bentogap"
+  status = "ready"
+  blurb = "**The gap against BentoPDF, counted row by row** and reported with its denominator."
+
+# The hero's buttons, rendered by landingkit's cta.html in the kit's order.
+[[params.cta]]
+  kind  = "docs"
+  href  = "https://go-pdfkit.github.io/docs/"
+  label = "Read the documentation"
+[[params.cta]]
+  kind  = "try"
+  href  = "https://go-pdfkit.github.io/playground/"
+  label = "Edit a PDF in your browser →"
