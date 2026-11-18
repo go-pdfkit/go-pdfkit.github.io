@@ -2,6 +2,12 @@
 /resources/
 .hugo_build.lock
 
+# ⛔ A background command's log. The durable-directory rule sends these HERE
+# rather than to /tmp, where `git add -A` sweeps them into a commit — which
+# happened once in go-pdfkit/reader and had to be corrected. One was sitting
+# untracked in this clone when this line was written.
+.prwait-*.log
+
 # ⛔ The playground's module is BUILT, never committed. It is six megabytes
 # compressed, it would land in every clone and in every diff, and a committed
 # copy goes stale against the libraries it was built from with nothing to say
